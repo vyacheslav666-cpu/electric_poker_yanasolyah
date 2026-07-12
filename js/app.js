@@ -51,6 +51,7 @@ const els = {
   utilityDock: document.querySelector('#utilityDock'),
   utilityToggle: document.querySelector('#utilityToggle'),
   utilityActions: document.querySelector('#utilityActions'),
+  fxLayer: document.querySelector('#fxLayer'),
   toast: document.querySelector('#toast')
 };
 
@@ -108,7 +109,8 @@ function renderCards(animate = false, animatedIndices = null) {
     if (state.selected[index]) button.classList.add('selected');
     if (animate && (!animatedIndices || animatedIndices.includes(index))) {
       button.classList.add(animatedIndices ? 'redrawing' : 'dealing');
-      button.style.animationDelay = `${index * 70}ms`;
+      const animationOrder = animatedIndices ? animatedIndices.indexOf(index) : index;
+      button.style.setProperty('--card-delay', String(animationOrder * 85) + 'ms');
     }
     if (state.phase === 'result' && state.winningIndices.includes(index)) {
       button.classList.add('winner');
@@ -119,12 +121,15 @@ function renderCards(animate = false, animatedIndices = null) {
     button.setAttribute('aria-pressed', state.selected[index] ? 'true' : 'false');
 
     if (!card) {
-      button.innerHTML = '<span class="card-back" aria-hidden="true"></span>';
+      button.innerHTML = '<span class="card-inner"><span class="card-back" aria-hidden="true"></span></span>';
     } else {
-      button.innerHTML = `<span class="card-face ${card.color}">
-        <span class="card-rank">${card.label}<small>${card.symbol}</small></span>
-        <span class="card-suit" aria-hidden="true">${card.symbol}</span>
-      </span>`;
+      button.innerHTML = '<span class="card-inner has-card">' +
+        '<span class="card-back" aria-hidden="true"></span>' +
+        '<span class="card-face ' + card.color + '">' +
+          '<span class="card-rank">' + card.label + '<small>' + card.symbol + '</small></span>' +
+          '<span class="card-suit" aria-hidden="true">' + card.symbol + '</span>' +
+        '</span>' +
+      '</span>';
     }
     els.cards.append(button);
   }
@@ -177,10 +182,16 @@ function render() {
 // combination to have its own colour and animation without branching in JS.
 function setMessage(text, kind = '') {
   els.message.textContent = text;
-  els.message.className = `message${kind ? ` ${kind}` : ''}`;
-  els.cabinet.classList.toggle('jackpot', kind === 'win');
+  els.message.className = 'message' + (kind ? ' ' + kind : '');
+  const payout = PAYOUTS.find(item => item.key === state.resultKey);
+  const multiplier = payout?.multiplier || 0;
+  const isWin = kind === 'win';
+  const winTier = multiplier >= 25 ? 'jackpot' : multiplier >= 4 ? 'big' : 'win';
+  els.cabinet.classList.toggle('celebration', isWin);
+  els.cabinet.classList.toggle('jackpot', isWin && multiplier >= 25);
+  els.cabinet.dataset.winTier = isWin ? winTier : '';
   PAYOUTS.forEach(item => {
-    els.cabinet.classList.toggle(`result-${item.key}`, kind === 'win' && state.resultKey === item.key);
+    els.cabinet.classList.toggle('result-' + item.key, isWin && state.resultKey === item.key);
   });
 }
 
@@ -213,7 +224,57 @@ function renderHistory() {
     </article>`).join('');
 }
 
-function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function waitForCardAnimations(selector, fallbackMs) {
+  const animatedCards = [...els.cards.querySelectorAll(selector)];
+  if (!animatedCards.length) return Promise.resolve();
+  const lastCard = animatedCards[animatedCards.length - 1];
+  return new Promise(resolve => {
+    let finished = false;
+    const complete = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(fallbackTimer);
+      resolve();
+    };
+    const fallbackTimer = setTimeout(complete, fallbackMs);
+    lastCard.addEventListener('animationend', complete, { once: true });
+    lastCard.addEventListener('animationcancel', complete, { once: true });
+  });
+}
+
+let celebrationTimer;
+function clearCelebration() {
+  clearTimeout(celebrationTimer);
+  delete document.body.dataset.celebration;
+  els.fxLayer.replaceChildren();
+}
+
+function launchCelebration(multiplier) {
+  clearCelebration();
+  const tier = multiplier >= 25 ? 'jackpot' : multiplier >= 4 ? 'big' : 'win';
+  const particleCount = tier === 'jackpot' ? 72 : tier === 'big' ? 44 : 24;
+  const palette = ['#fff2a1', '#ff4f9b', '#5ff7ff', '#8d6bff', '#61ffb0'];
+  const fragment = document.createDocumentFragment();
+  document.body.dataset.celebration = tier;
+  els.win.classList.remove('score-pop');
+  void els.win.offsetWidth;
+  els.win.classList.add('score-pop');
+
+  for (let index = 0; index < particleCount; index++) {
+    const particle = document.createElement('i');
+    particle.className = 'fx-particle';
+    particle.style.setProperty('--particle-x', String(Math.random() * 100) + 'vw');
+    particle.style.setProperty('--particle-drift', String((Math.random() - .5) * 26) + 'vw');
+    particle.style.setProperty('--particle-delay', String(Math.random() * 420) + 'ms');
+    particle.style.setProperty('--particle-duration', String(1450 + Math.random() * 1100) + 'ms');
+    particle.style.setProperty('--particle-spin', String(360 + Math.random() * 720) + 'deg');
+    particle.style.setProperty('--particle-color', palette[index % palette.length]);
+    fragment.append(particle);
+  }
+
+  els.fxLayer.append(fragment);
+  celebrationTimer = setTimeout(clearCelebration, tier === 'jackpot' ? 3200 : 2600);
+}
 
 // Round state: ready → holding → result.
 async function startHand() {
@@ -224,6 +285,7 @@ async function startHand() {
     return;
   }
   state.busy = true;
+  clearCelebration();
   state.phase = 'holding';
   state.balance -= bet;
   state.lastWin = 0;
@@ -238,7 +300,7 @@ async function startHand() {
   render();
   playTone('deal');
   save();
-  await delay(470);
+  await waitForCardAnimations('.card-slot.dealing', 1700);
   state.busy = false;
   renderCards(false);
   render();
@@ -259,7 +321,7 @@ async function finishHand() {
   state.selected.fill(false);
   renderCards(true, replaced);
   playTone('draw');
-  await delay(Math.max(320, replaced.length * 75));
+  await waitForCardAnimations('.card-slot.redrawing', 1450);
 
   const result = evaluateSeven(state.hand);
   state.phase = 'result';
@@ -270,7 +332,8 @@ async function finishHand() {
     state.balance += state.lastWin;
     setWinMessage(result.payout.name, state.lastWin);
     if (navigator.vibrate) navigator.vibrate([55, 35, 70, 35, 110]);
-    playTone('win');
+    launchCelebration(result.payout.multiplier);
+    playTone(result.payout.multiplier >= 25 ? 'jackpot' : result.payout.multiplier >= 4 ? 'bigWin' : 'win');
   } else {
     state.lastWin = 0;
     setMessage('Комбинации нет', 'lose');
