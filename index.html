@@ -130,6 +130,39 @@
         </button>
       </div>
 
+      <section class="appearance-section" aria-labelledby="cardsStyleTitle">
+        <div class="preference-heading">
+          <div>
+            <span class="preference-index">01</span>
+            <h3 id="cardsStyleTitle">Стиль карт</h3>
+          </div>
+          <small>лицо и рубашка отдельно</small>
+        </div>
+
+        <p class="choice-label">Лицевая сторона</p>
+        <div class="card-theme-grid" role="group" aria-label="Стиль лицевой стороны карт">
+          <button class="visual-choice" type="button" data-card-theme-choice="ivory" aria-pressed="true">
+            <span class="mini-card ivory"><b>A</b><i>♠</i></span>
+            <span><strong>Ivory</strong><small>классика</small></span>
+          </button>
+          <button class="visual-choice" type="button" data-card-theme-choice="neon" aria-pressed="false">
+            <span class="mini-card neon"><b>K</b><i>♥</i></span>
+            <span><strong>Neon</strong><small>киберпанк</small></span>
+          </button>
+          <button class="visual-choice" type="button" data-card-theme-choice="noir" aria-pressed="false">
+            <span class="mini-card noir"><b>Q</b><i>♦</i></span>
+            <span><strong>Noir</strong><small>black gold</small></span>
+          </button>
+        </div>
+
+        <p class="choice-label">Рубашка</p>
+        <div class="card-back-grid" role="group" aria-label="Стиль рубашки карт">
+          <button class="back-choice" type="button" data-card-back-choice="royal" aria-label="Рубашка Royal" aria-pressed="true"><i class="mini-back royal">7</i><span>Royal</span></button>
+          <button class="back-choice" type="button" data-card-back-choice="circuit" aria-label="Рубашка Circuit" aria-pressed="false"><i class="mini-back circuit">7</i><span>Circuit</span></button>
+          <button class="back-choice" type="button" data-card-back-choice="emerald" aria-label="Рубашка Emerald" aria-pressed="false"><i class="mini-back emerald">7</i><span>Emerald</span></button>
+        </div>
+      </section>
+
       <p class="settings-note">Четыре оригинальных микса генерируются прямо в браузере и работают офлайн.</p>
       <button class="main-button modal-close" id="closeSettings">Готово</button>
     </div>

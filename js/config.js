@@ -36,4 +36,16 @@ export const MUSIC_TRACKS = [
   { id: 'high-roller', title: 'High Roller', subtitle: 'яркий big-room swing', bpm: 132 }
 ];
 
+export const CARD_THEMES = [
+  { id: 'ivory', title: 'Ivory', subtitle: 'классика казино' },
+  { id: 'neon', title: 'Neon', subtitle: 'тёмный киберпанк' },
+  { id: 'noir', title: 'Noir', subtitle: 'чёрное золото' }
+];
+
+export const CARD_BACKS = [
+  { id: 'royal', title: 'Royal' },
+  { id: 'circuit', title: 'Circuit' },
+  { id: 'emerald', title: 'Emerald' }
+];
+
 export const STORAGE_KEY = 'electropoker-save-v1';
