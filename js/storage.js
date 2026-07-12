@@ -1,4 +1,7 @@
-import { STORAGE_KEY } from './config.js';
+import { MUSIC_TRACKS, STORAGE_KEY } from './config.js';
+
+const DEFAULT_MUSIC_TRACK = MUSIC_TRACKS[0].id;
+const MUSIC_TRACK_IDS = new Set(MUSIC_TRACKS.map(track => track.id));
 
 /** Read and sanitize the browser save instead of trusting localStorage blindly. */
 export function loadSave() {
@@ -9,10 +12,11 @@ export function loadSave() {
       bet: Number.isFinite(saved?.bet) && saved.bet >= 10 ? Math.floor(saved.bet / 10) * 10 : 10,
       sound: saved?.sound !== false,
       music: saved?.music === true,
+      musicTrack: MUSIC_TRACK_IDS.has(saved?.musicTrack) ? saved.musicTrack : DEFAULT_MUSIC_TRACK,
       history: Array.isArray(saved?.history) ? saved.history.slice(0, 30) : []
     };
   } catch {
-    return { balance: 1000, bet: 10, sound: true, music: false, history: [] };
+    return { balance: 1000, bet: 10, sound: true, music: false, musicTrack: DEFAULT_MUSIC_TRACK, history: [] };
   }
 }
 
@@ -24,6 +28,7 @@ export function saveState(state) {
     bet: state.bet,
     sound: state.sound,
     music: state.music,
+    musicTrack: state.musicTrack,
     history: state.history
   }));
 }

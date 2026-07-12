@@ -4,8 +4,8 @@
  * `state` is the single source of truth for the current session. Poker rules,
  * persistence and sound stay in separate modules so they do not depend on DOM.
  */
-import { PAYOUTS } from './config.js';
-import { configureAudio, playTone, startMusic, stopMusic } from './audio.js';
+import { MUSIC_TRACKS, PAYOUTS } from './config.js';
+import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from './audio.js';
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
 // Cache the DOM once; render functions update these nodes throughout a round.
@@ -30,8 +30,19 @@ const els = {
   historyDialog: document.querySelector('#historyDialog'),
   historyList: document.querySelector('#historyList'),
   closeHistory: document.querySelector('#closeHistory'),
+  settingsButton: document.querySelector('#settingsButton'),
+  settingsDialog: document.querySelector('#settingsDialog'),
+  closeSettings: document.querySelector('#closeSettings'),
   soundButton: document.querySelector('#soundButton'),
   musicButton: document.querySelector('#musicButton'),
+  musicState: document.querySelector('#musicState'),
+  soundState: document.querySelector('#soundState'),
+  previousTrack: document.querySelector('#previousTrack'),
+  nextTrack: document.querySelector('#nextTrack'),
+  trackCounter: document.querySelector('#trackCounter'),
+  trackTitle: document.querySelector('#trackTitle'),
+  trackSubtitle: document.querySelector('#trackSubtitle'),
+  equalizer: document.querySelector('#equalizer'),
   resetButton: document.querySelector('#resetButton'),
   depositButton: document.querySelector('#depositButton'),
   utilityDock: document.querySelector('#utilityDock'),
@@ -50,6 +61,7 @@ const state = {
   bet: loaded.bet,
   sound: loaded.sound,
   music: loaded.music,
+  musicTrack: loaded.musicTrack,
   deck: [],
   hand: [],
   selected: Array(7).fill(false),
@@ -114,12 +126,20 @@ function renderCards(animate = false, animatedIndices = null) {
 
 function render() {
   const bet = state.bet;
+  const trackIndex = Math.max(0, MUSIC_TRACKS.findIndex(track => track.id === state.musicTrack));
+  const track = MUSIC_TRACKS[trackIndex];
   els.balance.textContent = state.balance.toLocaleString('ru-RU');
   els.bet.textContent = bet;
   els.topBet.textContent = bet;
   els.win.textContent = state.lastWin.toLocaleString('ru-RU');
-  els.soundButton.textContent = `Звук: ${state.sound ? 'вкл.' : 'выкл.'}`;
-  els.musicButton.textContent = `Музыка: ${state.music ? 'вкл.' : 'выкл.'}`;
+  els.musicButton.setAttribute('aria-pressed', String(state.music));
+  els.soundButton.setAttribute('aria-pressed', String(state.sound));
+  els.musicState.textContent = state.music ? 'Вкл.' : 'Выкл.';
+  els.soundState.textContent = state.sound ? 'Вкл.' : 'Выкл.';
+  els.trackCounter.textContent = `${String(trackIndex + 1).padStart(2, '0')} / ${String(MUSIC_TRACKS.length).padStart(2, '0')}`;
+  els.trackTitle.textContent = track.title;
+  els.trackSubtitle.textContent = `${track.subtitle} · ${track.bpm} BPM`;
+  els.equalizer.classList.toggle('playing', state.music);
   els.betDown.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betHalf.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betUp.disabled = state.phase === 'holding' || state.busy;
@@ -281,6 +301,16 @@ function adjustBet(action) {
   save();
 }
 
+function changeMusicTrack(direction) {
+  const currentIndex = Math.max(0, MUSIC_TRACKS.findIndex(track => track.id === state.musicTrack));
+  const nextIndex = (currentIndex + direction + MUSIC_TRACKS.length) % MUSIC_TRACKS.length;
+  state.musicTrack = MUSIC_TRACKS[nextIndex].id;
+  setMusicTrack(state.musicTrack);
+  playTone('click');
+  save();
+  render();
+}
+
 let toastTimer;
 function showToast(text) {
   clearTimeout(toastTimer);
@@ -323,6 +353,16 @@ els.closeHistory.addEventListener('click', () => els.historyDialog.close());
 els.historyDialog.addEventListener('click', event => {
   if (event.target === els.historyDialog) els.historyDialog.close();
 });
+els.settingsButton.addEventListener('click', () => {
+  els.settingsDialog.showModal();
+  playTone('click');
+});
+els.closeSettings.addEventListener('click', () => els.settingsDialog.close());
+els.settingsDialog.addEventListener('click', event => {
+  if (event.target === els.settingsDialog) els.settingsDialog.close();
+});
+els.previousTrack.addEventListener('click', () => changeMusicTrack(-1));
+els.nextTrack.addEventListener('click', () => changeMusicTrack(1));
 els.soundButton.addEventListener('click', () => {
   state.sound = !state.sound;
   if (state.sound) playTone('click');

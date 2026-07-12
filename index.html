@@ -47,8 +47,7 @@
     <div class="utility-dock" id="utilityDock">
       <div class="footer-actions" id="utilityActions">
         <button class="text-button" id="historyButton">История</button>
-        <button class="text-button" id="musicButton">Музыка: вкл.</button>
-        <button class="text-button" id="soundButton">Звук: вкл.</button>
+        <button class="text-button atmosphere-button" id="settingsButton">Атмосфера</button>
         <button class="text-button" id="depositButton">Додеп +1000</button>
         <button class="text-button" id="resetButton">Сброс</button>
         <button class="text-button" id="helpButton">Справка</button>
@@ -89,6 +88,50 @@
       <h2>История игр</h2>
       <div class="history-list" id="historyList"></div>
       <button class="main-button modal-close" id="closeHistory">Закрыть</button>
+    </div>
+  </dialog>
+
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+    <div class="modal-body settings-modal">
+      <div class="settings-heading">
+        <div>
+          <p class="settings-kicker">Музыка и настроение</p>
+          <h2 id="settingsTitle">Атмосфера</h2>
+        </div>
+        <span class="live-badge"><i aria-hidden="true"></i> Live mix</span>
+      </div>
+
+      <section class="music-console" aria-labelledby="musicConsoleTitle">
+        <div class="console-label">
+          <span id="musicConsoleTitle">Сейчас играет</span>
+          <span id="trackCounter">01 / 04</span>
+        </div>
+        <div class="track-picker">
+          <button class="track-arrow" id="previousTrack" type="button" aria-label="Предыдущий трек">‹</button>
+          <div class="track-copy" aria-live="polite">
+            <strong id="trackTitle">Velvet Shuffle</strong>
+            <small id="trackSubtitle">мягкий casino jazz</small>
+          </div>
+          <button class="track-arrow" id="nextTrack" type="button" aria-label="Следующий трек">›</button>
+        </div>
+        <div class="equalizer" id="equalizer" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </section>
+
+      <div class="audio-toggles">
+        <button class="setting-toggle" id="musicButton" type="button" aria-pressed="false">
+          <span><i class="setting-icon" aria-hidden="true">♫</i> Музыка</span>
+          <strong id="musicState">Выкл.</strong>
+        </button>
+        <button class="setting-toggle" id="soundButton" type="button" aria-pressed="true">
+          <span><i class="setting-icon" aria-hidden="true">✦</i> Звуки игры</span>
+          <strong id="soundState">Вкл.</strong>
+        </button>
+      </div>
+
+      <p class="settings-note">Четыре оригинальных микса генерируются прямо в браузере и работают офлайн.</p>
+      <button class="main-button modal-close" id="closeSettings">Готово</button>
     </div>
   </dialog>
 
