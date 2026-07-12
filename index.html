@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#080608">
+  <title>Электропокер</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <!-- Compact logo replaces a tall title so the game fits a phone viewport. -->
+    <header class="topbar">
+      <div class="brand-logo" aria-label="Электропокер">
+        <span class="logo-seven">7</span>
+        <span class="logo-suit">♦</span>
+      </div>
+    </header>
+
+    <!-- The cabinet contains all controls needed during an active round. -->
+    <section class="cabinet" aria-label="Игровой автомат">
+      <div class="score-strip">
+        <div class="score"><span class="score-label">Баланс</span><strong class="score-value" id="balance">1000</strong></div>
+        <div class="score"><span class="score-label">Ставка</span><strong class="score-value" id="topBet">10</strong></div>
+        <div class="score"><span class="score-label">Выигрыш</span><strong class="score-value" id="win">0</strong></div>
+      </div>
+
+      <div class="game-area">
+        <div class="message-wrap" aria-live="polite"><p class="message" id="message">Выберите ставку и раздавайте</p></div>
+        <div class="cards" id="cards" aria-label="Карты игрока"></div>
+
+        <div class="controls">
+          <div class="bet-panel" aria-label="Размер ставки">
+            <button class="bet-step" id="betDown" aria-label="Уменьшить ставку на 10">−10</button>
+            <button class="bet-step" id="betHalf" aria-label="Уменьшить ставку вдвое">÷2</button>
+            <div class="bet-display"><span>Ставка</span><strong id="bet">10</strong></div>
+            <button class="bet-step" id="betDouble" aria-label="Увеличить ставку вдвое">×2</button>
+            <button class="bet-step" id="betUp" aria-label="Увеличить ставку на 10">+10</button>
+          </div>
+          <button class="main-button" id="mainButton">Раздать</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Secondary controls remain outside the card table but always reachable. -->
+    <div class="utility-dock" id="utilityDock">
+      <div class="footer-actions" id="utilityActions">
+        <button class="text-button" id="historyButton">История</button>
+        <button class="text-button" id="musicButton">Музыка: вкл.</button>
+        <button class="text-button" id="soundButton">Звук: вкл.</button>
+        <button class="text-button" id="depositButton">Додеп +1000</button>
+        <button class="text-button" id="resetButton">Сброс</button>
+        <button class="text-button" id="helpButton">Справка</button>
+      </div>
+      <button class="dock-toggle" id="utilityToggle" aria-label="Открыть дополнительные кнопки" aria-expanded="false">•••</button>
+    </div>
+  </main>
+
+  <!-- Native dialogs keep help/history above the fullscreen game on mobile. -->
+  <dialog id="helpDialog">
+    <div class="modal-body">
+      <h2>Как играть</h2>
+      <ol>
+        <li>Выберите ставку и нажмите «Раздать».</li>
+        <li>Нажмите на карты, которые хотите перетусовать. Они будут помечены «Заменить».</li>
+        <li>Нажмите «Перетусовать»: выбранные карты заменятся, а за лучшую комбинацию из пяти карт будут начислены очки.</li>
+      </ol>
+      <div class="combo-guide">
+        <p class="combo-guide-title">Комбинации</p>
+        <div class="combo-row royal"><strong>Флеш-рояль</strong><b>×250</b><small>10, валет, дама, король и туз одной масти.</small></div>
+        <div class="combo-row straight-flush"><strong>Стрит-флеш</strong><b>×50</b><small>Пять последовательных карт одной масти.</small></div>
+        <div class="combo-row four"><strong>Каре</strong><b>×25</b><small>Четыре карты одного достоинства.</small></div>
+        <div class="combo-row full-house"><strong>Фулл-хаус</strong><b>×9</b><small>Тройка и пара одновременно.</small></div>
+        <div class="combo-row flush"><strong>Флеш</strong><b>×6</b><small>Пять карт одной масти.</small></div>
+        <div class="combo-row straight"><strong>Стрит</strong><b>×4</b><small>Пять последовательных карт любых мастей. Туз может быть перед двойкой.</small></div>
+        <div class="combo-row three"><strong>Тройка</strong><b>×3</b><small>Три карты одного достоинства.</small></div>
+        <div class="combo-row two-pair"><strong>Две пары</strong><b>×2</b><small>Две разные пары.</small></div>
+        <div class="combo-row jacks"><strong>Валеты или лучше</strong><b>×1</b><small>Пара валетов, дам, королей или тузов.</small></div>
+      </div>
+      <p class="combo-formula">ВЫИГРЫШ = СТАВКА × КОЭФФИЦИЕНТ</p>
+      <p>В руке семь карт, но засчитывается лучшая пятёрка. Колода стандартная, 52 карты, без джокеров. Это игра на виртуальные кредиты — никаких покупок и реальных ставок.</p>
+      <button class="main-button modal-close" id="closeHelp">Понятно</button>
+    </div>
+  </dialog>
+
+  <dialog id="historyDialog">
+    <div class="modal-body">
+      <h2>История игр</h2>
+      <div class="history-list" id="historyList"></div>
+      <button class="main-button modal-close" id="closeHistory">Закрыть</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
