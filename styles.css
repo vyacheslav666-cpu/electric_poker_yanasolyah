@@ -1818,3 +1818,230 @@ body[data-card-back="emerald"] .card-back::after {
   .visual-choice small { display: none; }
   .back-choice { padding-inline: 5px; gap: 5px; }
 }
+
+/* Table rooms: a full palette swap for the room, cabinet and felt. */
+.table-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.table-choice {
+  min-width: 0;
+  border: 1px solid #42382e;
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #a69c8e;
+  background: linear-gradient(155deg, #161316, #0a090b);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .16s ease, transform .16s ease, background .16s ease;
+}
+.table-choice:hover { transform: translateY(-2px); border-color: #7b6949; }
+.table-choice[aria-pressed="true"] {
+  border-color: #39f2dc;
+  color: #eafffb;
+  background: linear-gradient(155deg, rgba(25, 108, 100, .38), rgba(8, 29, 28, .82));
+  box-shadow: inset 0 0 18px rgba(57, 242, 220, .06), 0 0 13px rgba(57, 242, 220, .12);
+}
+.table-choice > span { min-width: 0; }
+.table-choice strong,
+.table-choice small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-choice strong { font-size: .72rem; letter-spacing: .025em; }
+.table-choice small { margin-top: 3px; color: #776f64; font-size: .55rem; }
+.table-choice[aria-pressed="true"] small { color: #6fc9bd; }
+
+.table-swatch {
+  position: relative;
+  width: 58px;
+  height: 35px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 2px solid var(--swatch-metal);
+  border-radius: 8px;
+  background: linear-gradient(145deg, var(--swatch-room), #08090b);
+  box-shadow: inset 0 0 10px rgba(0,0,0,.35), 0 4px 7px rgba(0,0,0,.35);
+}
+.table-swatch::before {
+  content: "";
+  position: absolute;
+  inset: 7px 9px;
+  border: 1px solid var(--swatch-light);
+  border-radius: 50%;
+  background: var(--swatch-felt);
+  box-shadow: 0 0 8px var(--swatch-light);
+}
+.table-swatch b {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 7px;
+  border-radius: 2px;
+  background: #fff8df;
+  box-shadow: -9px 0 0 #fff8df, 9px 0 0 #fff8df;
+  transform: translate(-50%, -50%);
+}
+.table-swatch.emerald-room { --swatch-metal: #f1c858; --swatch-room: #352020; --swatch-felt: #08705d; --swatch-light: #5ff7dd; }
+.table-swatch.neon-vegas { --swatch-metal: #795cff; --swatch-room: #1c0a55; --swatch-felt: #4b167b; --swatch-light: #55f7ff; }
+.table-swatch.ruby-royale { --swatch-metal: #ffc766; --swatch-room: #4a0a20; --swatch-felt: #861735; --swatch-light: #ff6f9d; }
+.table-swatch.ocean-club { --swatch-metal: #57e9ff; --swatch-room: #062c55; --swatch-felt: #087c91; --swatch-light: #8dfff4; }
+
+body[data-table-theme="emerald-room"] {
+  --room-a: #164f46;
+  --room-b: #2b1020;
+  --room-base: #05080a;
+  --table-accent: #59f5dc;
+  --table-accent-soft: rgba(89, 245, 220, .34);
+  --table-secondary: #ffd867;
+  --table-metal-dark: #6e4510;
+  --cabinet-a: #351a22;
+  --cabinet-b: #0a0a0c;
+  --felt-a: #0c5d4e;
+  --felt-b: #04231e;
+  --felt-glow: rgba(72, 255, 220, .28);
+  --score-a: #102b27;
+  --score-b: #070b0c;
+  --cyan: #59f5dc;
+  --gold: #ffd867;
+}
+
+body[data-table-theme="neon-vegas"] {
+  --room-a: #7437ff;
+  --room-b: #ff2fa2;
+  --room-base: #07041b;
+  --table-accent: #64f6ff;
+  --table-accent-soft: rgba(100, 246, 255, .4);
+  --table-secondary: #ff62cf;
+  --table-metal-dark: #4932b5;
+  --cabinet-a: #291065;
+  --cabinet-b: #09051f;
+  --felt-a: #471d73;
+  --felt-b: #160a35;
+  --felt-glow: rgba(255, 70, 202, .3);
+  --score-a: #18134a;
+  --score-b: #08071d;
+  --cyan: #64f6ff;
+  --gold: #ff78dc;
+}
+
+body[data-table-theme="ruby-royale"] {
+  --room-a: #a4153e;
+  --room-b: #ff8b39;
+  --room-base: #100409;
+  --table-accent: #ff7ca3;
+  --table-accent-soft: rgba(255, 124, 163, .35);
+  --table-secondary: #ffd56a;
+  --table-metal-dark: #855214;
+  --cabinet-a: #5f0e2a;
+  --cabinet-b: #16050b;
+  --felt-a: #8a1938;
+  --felt-b: #350817;
+  --felt-glow: rgba(255, 113, 146, .28);
+  --score-a: #3a0d1d;
+  --score-b: #100509;
+  --cyan: #ff8eb0;
+  --gold: #ffd56a;
+}
+
+body[data-table-theme="ocean-club"] {
+  --room-a: #087ca5;
+  --room-b: #22e5cc;
+  --room-base: #03101f;
+  --table-accent: #81fff1;
+  --table-accent-soft: rgba(129, 255, 241, .35);
+  --table-secondary: #78d7ff;
+  --table-metal-dark: #12628e;
+  --cabinet-a: #073f66;
+  --cabinet-b: #04111f;
+  --felt-a: #087a8c;
+  --felt-b: #043441;
+  --felt-glow: rgba(83, 238, 255, .3);
+  --score-a: #073b49;
+  --score-b: #041017;
+  --cyan: #81fff1;
+  --gold: #8ee4ff;
+}
+
+body[data-table-theme] {
+  background:
+    radial-gradient(ellipse at 12% -5%, color-mix(in srgb, var(--room-a) 76%, transparent), transparent 38rem),
+    radial-gradient(ellipse at 94% 18%, color-mix(in srgb, var(--room-b) 58%, transparent), transparent 34rem),
+    radial-gradient(circle at 50% 115%, color-mix(in srgb, var(--table-accent) 20%, transparent), transparent 36rem),
+    linear-gradient(155deg, color-mix(in srgb, var(--room-base) 78%, var(--room-a)), var(--room-base) 58%, #020305);
+}
+
+body[data-table-theme]::after {
+  opacity: .32;
+  background:
+    linear-gradient(90deg, transparent 49.5%, color-mix(in srgb, var(--table-accent) 8%, transparent) 50%, transparent 50.5%) 0 0 / 52px 52px,
+    linear-gradient(transparent 49.5%, color-mix(in srgb, var(--table-secondary) 7%, transparent) 50%, transparent 50.5%) 0 0 / 52px 52px,
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px);
+}
+
+body[data-table-theme] .cabinet {
+  background:
+    linear-gradient(155deg, var(--cabinet-a), var(--cabinet-b) 62%, color-mix(in srgb, var(--cabinet-a) 45%, #060608)) padding-box,
+    repeating-conic-gradient(from 25deg, var(--table-metal-dark) 0 4deg, var(--table-secondary) 4deg 8deg, color-mix(in srgb, var(--table-metal-dark) 76%, #000) 8deg 12deg) border-box;
+  box-shadow:
+    0 26px 80px rgba(0,0,0,.66),
+    0 0 42px color-mix(in srgb, var(--table-accent) 22%, transparent),
+    inset 0 0 0 2px color-mix(in srgb, var(--table-secondary) 34%, transparent),
+    inset 0 0 72px color-mix(in srgb, var(--room-b) 12%, transparent);
+}
+
+body[data-table-theme] .cabinet::before {
+  background: radial-gradient(circle, #fff9d8 0 2px, var(--table-secondary) 3px, transparent 5px) 0 0 / 30px 30px;
+  filter: drop-shadow(0 0 4px var(--table-accent));
+}
+
+body[data-table-theme] .score-strip {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cabinet-a) 82%, #111), var(--cabinet-b));
+}
+body[data-table-theme] .score {
+  border-color: color-mix(in srgb, var(--table-secondary) 46%, #222);
+  background: linear-gradient(180deg, var(--score-a), var(--score-b));
+  box-shadow: inset 0 0 20px rgba(0,0,0,.45), 0 0 12px color-mix(in srgb, var(--table-accent) 10%, transparent);
+}
+body[data-table-theme] .score + .score { border-left-color: color-mix(in srgb, var(--table-secondary) 45%, #222); }
+body[data-table-theme] .score-value {
+  color: var(--table-accent);
+  text-shadow: 0 0 7px #fff, 0 0 18px var(--table-accent), 0 0 30px color-mix(in srgb, var(--table-accent) 42%, transparent);
+}
+
+body[data-table-theme] .game-area {
+  border-color: color-mix(in srgb, var(--table-secondary) 38%, transparent);
+  background:
+    radial-gradient(circle at 50% 42%, var(--felt-glow), transparent 54%),
+    linear-gradient(30deg, rgba(255,255,255,.03) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,.03) 87.5%) 0 0 / 18px 31px,
+    linear-gradient(150deg, var(--felt-a), var(--felt-b) 70%);
+  box-shadow:
+    inset 0 0 55px rgba(0,0,0,.58),
+    inset 0 0 110px color-mix(in srgb, var(--table-accent) 8%, transparent),
+    0 2px 0 color-mix(in srgb, var(--table-secondary) 24%, transparent);
+}
+
+body[data-table-theme] .message-wrap {
+  border-color: color-mix(in srgb, var(--table-accent) 44%, transparent);
+  background: color-mix(in srgb, var(--felt-b) 84%, #020304);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--table-accent) 12%, transparent), 0 0 15px color-mix(in srgb, var(--table-accent) 9%, transparent);
+}
+body[data-table-theme] .message {
+  color: var(--table-accent);
+  text-shadow: 0 0 7px #fff, 0 0 18px var(--table-accent), 2px 2px 0 color-mix(in srgb, var(--room-b) 72%, #111);
+}
+body[data-table-theme] .controls {
+  border-color: color-mix(in srgb, var(--table-secondary) 34%, transparent);
+  box-shadow: inset 0 0 0 2px #050506, 0 5px 14px rgba(0,0,0,.35), 0 0 16px color-mix(in srgb, var(--table-accent) 8%, transparent);
+}
+body[data-table-theme] .footer-actions { border-color: color-mix(in srgb, var(--table-secondary) 48%, #222); }
+
+@media (max-width: 480px) {
+  .table-theme-grid { grid-template-columns: 1fr; }
+  .table-choice { padding-block: 7px; }
+  .table-swatch { width: 52px; height: 31px; }
+}
