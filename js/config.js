@@ -48,4 +48,11 @@ export const CARD_BACKS = [
   { id: 'emerald', title: 'Emerald' }
 ];
 
+export const TABLE_THEMES = [
+  { id: 'emerald-room', title: 'Emerald', subtitle: 'классический зелёный' },
+  { id: 'neon-vegas', title: 'Neon Vegas', subtitle: 'фиолетовый неон' },
+  { id: 'ruby-royale', title: 'Ruby Royale', subtitle: 'красный бархат' },
+  { id: 'ocean-club', title: 'Ocean Club', subtitle: 'лазурный лаунж' }
+];
+
 export const STORAGE_KEY = 'electropoker-save-v1';

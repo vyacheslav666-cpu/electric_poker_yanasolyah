@@ -4,7 +4,7 @@
  * `state` is the single source of truth for the current session. Poker rules,
  * persistence and sound stay in separate modules so they do not depend on DOM.
  */
-import { CARD_BACKS, CARD_THEMES, MUSIC_TRACKS, PAYOUTS } from './config.js';
+import { CARD_BACKS, CARD_THEMES, MUSIC_TRACKS, PAYOUTS, TABLE_THEMES } from './config.js';
 import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from './audio.js';
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
@@ -45,6 +45,7 @@ const els = {
   equalizer: document.querySelector('#equalizer'),
   cardThemeChoices: [...document.querySelectorAll('[data-card-theme-choice]')],
   cardBackChoices: [...document.querySelectorAll('[data-card-back-choice]')],
+  tableThemeChoices: [...document.querySelectorAll('[data-table-theme-choice]')],
   resetButton: document.querySelector('#resetButton'),
   depositButton: document.querySelector('#depositButton'),
   utilityDock: document.querySelector('#utilityDock'),
@@ -66,6 +67,7 @@ const state = {
   musicTrack: loaded.musicTrack,
   cardTheme: loaded.cardTheme,
   cardBack: loaded.cardBack,
+  tableTheme: loaded.tableTheme,
   deck: [],
   hand: [],
   selected: Array(7).fill(false),
@@ -146,11 +148,15 @@ function render() {
   els.equalizer.classList.toggle('playing', state.music);
   document.body.dataset.cardTheme = state.cardTheme;
   document.body.dataset.cardBack = state.cardBack;
+  document.body.dataset.tableTheme = state.tableTheme;
   els.cardThemeChoices.forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.cardThemeChoice === state.cardTheme));
   });
   els.cardBackChoices.forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.cardBackChoice === state.cardBack));
+  });
+  els.tableThemeChoices.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.tableThemeChoice === state.tableTheme));
   });
   els.betDown.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betHalf.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
@@ -323,7 +329,7 @@ function changeMusicTrack(direction) {
   render();
 }
 
-function setCardPreference(key, value, options) {
+function setVisualPreference(key, value, options) {
   if (!options.some(option => option.id === value)) return;
   state[key] = value;
   playTone('click');
@@ -384,10 +390,13 @@ els.settingsDialog.addEventListener('click', event => {
 els.previousTrack.addEventListener('click', () => changeMusicTrack(-1));
 els.nextTrack.addEventListener('click', () => changeMusicTrack(1));
 els.cardThemeChoices.forEach(button => {
-  button.addEventListener('click', () => setCardPreference('cardTheme', button.dataset.cardThemeChoice, CARD_THEMES));
+  button.addEventListener('click', () => setVisualPreference('cardTheme', button.dataset.cardThemeChoice, CARD_THEMES));
 });
 els.cardBackChoices.forEach(button => {
-  button.addEventListener('click', () => setCardPreference('cardBack', button.dataset.cardBackChoice, CARD_BACKS));
+  button.addEventListener('click', () => setVisualPreference('cardBack', button.dataset.cardBackChoice, CARD_BACKS));
+});
+els.tableThemeChoices.forEach(button => {
+  button.addEventListener('click', () => setVisualPreference('tableTheme', button.dataset.tableThemeChoice, TABLE_THEMES));
 });
 els.soundButton.addEventListener('click', () => {
   state.sound = !state.sound;
