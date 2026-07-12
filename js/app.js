@@ -4,7 +4,7 @@
  * `state` is the single source of truth for the current session. Poker rules,
  * persistence and sound stay in separate modules so they do not depend on DOM.
  */
-import { MUSIC_TRACKS, PAYOUTS } from './config.js';
+import { CARD_BACKS, CARD_THEMES, MUSIC_TRACKS, PAYOUTS } from './config.js';
 import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from './audio.js';
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
@@ -43,6 +43,8 @@ const els = {
   trackTitle: document.querySelector('#trackTitle'),
   trackSubtitle: document.querySelector('#trackSubtitle'),
   equalizer: document.querySelector('#equalizer'),
+  cardThemeChoices: [...document.querySelectorAll('[data-card-theme-choice]')],
+  cardBackChoices: [...document.querySelectorAll('[data-card-back-choice]')],
   resetButton: document.querySelector('#resetButton'),
   depositButton: document.querySelector('#depositButton'),
   utilityDock: document.querySelector('#utilityDock'),
@@ -62,6 +64,8 @@ const state = {
   sound: loaded.sound,
   music: loaded.music,
   musicTrack: loaded.musicTrack,
+  cardTheme: loaded.cardTheme,
+  cardBack: loaded.cardBack,
   deck: [],
   hand: [],
   selected: Array(7).fill(false),
@@ -140,6 +144,14 @@ function render() {
   els.trackTitle.textContent = track.title;
   els.trackSubtitle.textContent = `${track.subtitle} · ${track.bpm} BPM`;
   els.equalizer.classList.toggle('playing', state.music);
+  document.body.dataset.cardTheme = state.cardTheme;
+  document.body.dataset.cardBack = state.cardBack;
+  els.cardThemeChoices.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.cardThemeChoice === state.cardTheme));
+  });
+  els.cardBackChoices.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.cardBackChoice === state.cardBack));
+  });
   els.betDown.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betHalf.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betUp.disabled = state.phase === 'holding' || state.busy;
@@ -311,6 +323,14 @@ function changeMusicTrack(direction) {
   render();
 }
 
+function setCardPreference(key, value, options) {
+  if (!options.some(option => option.id === value)) return;
+  state[key] = value;
+  playTone('click');
+  save();
+  render();
+}
+
 let toastTimer;
 function showToast(text) {
   clearTimeout(toastTimer);
@@ -363,6 +383,12 @@ els.settingsDialog.addEventListener('click', event => {
 });
 els.previousTrack.addEventListener('click', () => changeMusicTrack(-1));
 els.nextTrack.addEventListener('click', () => changeMusicTrack(1));
+els.cardThemeChoices.forEach(button => {
+  button.addEventListener('click', () => setCardPreference('cardTheme', button.dataset.cardThemeChoice, CARD_THEMES));
+});
+els.cardBackChoices.forEach(button => {
+  button.addEventListener('click', () => setCardPreference('cardBack', button.dataset.cardBackChoice, CARD_BACKS));
+});
 els.soundButton.addEventListener('click', () => {
   state.sound = !state.sound;
   if (state.sound) playTone('click');
