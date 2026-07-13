@@ -3349,7 +3349,7 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
 
 @media (max-width: 900px) {
   .topbar {
-    grid-template-columns: 60px minmax(120px, 1fr) auto;
+    grid-template-columns: 60px minmax(180px, 1fr) auto;
   }
 
   .brand-logo {
