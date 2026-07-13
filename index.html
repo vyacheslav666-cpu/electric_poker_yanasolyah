@@ -15,6 +15,24 @@
         <span class="logo-seven">7</span>
         <span class="logo-suit">♦</span>
       </div>
+
+      <details class="odds-widget" id="oddsWidget">
+        <summary class="odds-summary" aria-label="Открыть вероятности комбинаций">
+          <span>Шанс выигрыша</span>
+          <strong id="oddsWinChance">—</strong>
+          <small id="oddsSummaryMeta">после раздачи</small>
+        </summary>
+        <section class="odds-panel" aria-label="Вероятности покерных комбинаций">
+          <div class="odds-panel-heading">
+            <div>
+              <span>Следующая рука</span>
+              <strong>Вероятности комбинаций</strong>
+            </div>
+            <small id="oddsPanelMeta">Раздайте карты</small>
+          </div>
+          <div class="odds-rows" id="oddsRows" aria-live="polite"></div>
+        </section>
+      </details>
     </header>
 
     <!-- The cabinet contains all controls needed during an active round. -->
