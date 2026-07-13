@@ -77,6 +77,7 @@ const state = {
   deck: [],
   hand: [],
   selected: Array(7).fill(false),
+  selectionFeedback: null,
   handHint: null,
   lastWin: 0,
   resultKey: null,
@@ -262,6 +263,9 @@ function renderCards(animate = false, animatedIndices = null) {
     if (card && state.phase === 'holding' && !state.busy) button.classList.add('active');
     if (card && state.phase === 'holding' && state.handHint?.madeIndices.includes(index) && !state.selected[index]) button.classList.add('made-combo');
     if (state.selected[index]) button.classList.add('selected');
+    if (card && state.phase === 'holding' && !state.busy && state.selectionFeedback?.index === index) {
+      button.classList.add(state.selectionFeedback.selected ? 'selection-pick' : 'selection-release');
+    }
     if (animate && (!animatedIndices || animatedIndices.includes(index))) {
       button.classList.add(animatedIndices ? 'redrawing' : 'dealing');
       const animationOrder = animatedIndices ? animatedIndices.indexOf(index) : index;
@@ -439,6 +443,36 @@ function launchCelebration(multiplier) {
   celebrationTimer = setTimeout(clearCelebration, tier === 'jackpot' ? 3200 : 2600);
 }
 
+
+function launchCardSelectionFeedback(index, selected, feedback) {
+  const card = els.cards.querySelector('[data-index="' + index + '"]');
+  if (!card) return;
+
+  const rect = card.getBoundingClientRect();
+  const burst = document.createElement('span');
+  burst.className = 'selection-burst ' + (selected ? 'locking' : 'releasing');
+  burst.style.setProperty('--selection-x', String(rect.left + rect.width / 2) + 'px');
+  burst.style.setProperty('--selection-y', String(rect.top + rect.height / 2) + 'px');
+
+  for (let sparkIndex = 0; sparkIndex < 8; sparkIndex++) {
+    const spark = document.createElement('i');
+    spark.className = 'selection-spark';
+    spark.style.setProperty('--spark-angle', String(sparkIndex * 45 + (selected ? 8 : -6)) + 'deg');
+    spark.style.setProperty('--spark-distance', String(-(28 + (sparkIndex % 3) * 8)) + 'px');
+    spark.style.setProperty('--spark-delay', String((sparkIndex % 2) * 28) + 'ms');
+    burst.append(spark);
+  }
+
+  els.fxLayer.querySelectorAll('.selection-burst').forEach(node => node.remove());
+  els.fxLayer.append(burst);
+
+  setTimeout(() => {
+    card.classList.remove('selection-pick', 'selection-release');
+    burst.remove();
+    if (state.selectionFeedback === feedback) state.selectionFeedback = null;
+  }, selected ? 620 : 460);
+}
+
 // Round state: ready → holding → result.
 async function startHand() {
   const bet = state.bet;
@@ -454,6 +488,7 @@ async function startHand() {
   state.lastWin = 0;
   state.resultKey = null;
   state.selected.fill(false);
+  state.selectionFeedback = null;
   state.winningIndices = [];
   state.deck = shuffle(makeDeck());
   state.hand = Array.from({ length: 7 }, draw);
@@ -474,6 +509,7 @@ async function startHand() {
 // possible five-card subset and returns the strongest paying combination.
 async function finishHand() {
   state.busy = true;
+  state.selectionFeedback = null;
   state.handHint = null;
   stopOddsCalculation();
   state.odds = { status: 'loading', result: null, error: '' };
@@ -524,10 +560,15 @@ async function finishHand() {
 
 function toggleHold(index) {
   if (state.phase !== 'holding' || state.busy || !state.hand[index]) return;
-  state.selected[index] = !state.selected[index];
-  if (navigator.vibrate) navigator.vibrate(18);
-  playTone('click');
+  const selected = !state.selected[index];
+  const feedback = { index, selected };
+  state.selected[index] = selected;
+  state.selectionFeedback = feedback;
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (navigator.vibrate) navigator.vibrate(reducedMotion ? 10 : selected ? [16, 12, 30] : 14);
+  playTone(selected ? 'select' : 'release');
   renderCards(false);
+  launchCardSelectionFeedback(index, selected, feedback);
   const selectedCount = state.selected.filter(Boolean).length;
   setMessage(
     selectedCount ? `Для замены выбрано: ${selectedCount}` : state.handHint.label,
@@ -660,6 +701,7 @@ els.resetButton.addEventListener('click', () => {
   state.phase = 'ready';
   state.hand = [];
   state.selected.fill(false);
+  state.selectionFeedback = null;
   state.handHint = null;
   state.winningIndices = [];
   state.lastWin = 0;
