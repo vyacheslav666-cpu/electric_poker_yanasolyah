@@ -8,6 +8,7 @@ import { CARD_BACKS, CARD_THEMES, MUSIC_TRACKS, PAYOUTS, TABLE_THEMES } from './
 import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from './audio.js';
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
+import { calculateHandOdds, ODDS_LABELS } from './probability.js';
 // Cache the DOM once; render functions update these nodes throughout a round.
 const els = {
   cards: document.querySelector('#cards'),
@@ -52,7 +53,12 @@ const els = {
   utilityToggle: document.querySelector('#utilityToggle'),
   utilityActions: document.querySelector('#utilityActions'),
   fxLayer: document.querySelector('#fxLayer'),
-  toast: document.querySelector('#toast')
+  toast: document.querySelector('#toast'),
+  oddsWidget: document.querySelector('#oddsWidget'),
+  oddsWinChance: document.querySelector('#oddsWinChance'),
+  oddsSummaryMeta: document.querySelector('#oddsSummaryMeta'),
+  oddsPanelMeta: document.querySelector('#oddsPanelMeta'),
+  oddsRows: document.querySelector('#oddsRows')
 };
 
 const loaded = loadSave();
@@ -77,7 +83,8 @@ const state = {
   resultKey: null,
   winningIndices: [],
   history: loaded.history,
-  busy: false
+  busy: false,
+  odds: { status: 'idle', result: null, error: '' }
 };
 
 // Audio reads the current toggles without owning application state.
@@ -94,6 +101,155 @@ function buildPaytable() {
     <div class="pay-row" data-pay-key="${item.key}">
       <span>${item.name}</span><strong>${item.multiplier}×</strong>
     </div>`).join('');
+}
+
+
+let oddsWorker = null;
+let oddsFallbackTimer = null;
+let oddsRequestId = 0;
+
+function stopOddsCalculation() {
+  if (oddsWorker) oddsWorker.terminate();
+  oddsWorker = null;
+  clearTimeout(oddsFallbackTimer);
+  oddsFallbackTimer = null;
+}
+
+function formatOddsPercent(probability, exact = true) {
+  const percent = probability * 100;
+  if (percent === 0) return exact ? '0%' : '<0,01%';
+  if (percent < .01) return '<0,01%';
+  const digits = percent < 1 ? 2 : 1;
+  return percent.toLocaleString('ru-RU', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits
+  }) + '%';
+}
+
+function oddsMeta(result) {
+  if (result.drawCount === 0) return 'Точно · текущая рука';
+  const total = result.totalOutcomes.toLocaleString('ru-RU');
+  if (result.exact) return 'Точно · ' + total + ' вариантов замены';
+  return 'Оценка · ' + result.evaluatedOutcomes.toLocaleString('ru-RU') +
+    ' сценариев из ' + total;
+}
+
+function renderOdds() {
+  const { status, result, error } = state.odds;
+  els.oddsWidget.dataset.status = status;
+  els.oddsRows.setAttribute('aria-busy', String(status === 'loading'));
+
+  if (status === 'idle') {
+    els.oddsWinChance.textContent = '—';
+    els.oddsSummaryMeta.textContent = 'после раздачи';
+    els.oddsPanelMeta.textContent = 'Раздайте карты';
+    els.oddsRows.innerHTML = '<p class="odds-placeholder">После раздачи здесь появится шанс каждой комбинации.</p>';
+    return;
+  }
+
+  if (status === 'loading') {
+    els.oddsWinChance.textContent = '…';
+    els.oddsSummaryMeta.textContent = 'считаем варианты';
+    els.oddsPanelMeta.textContent = 'Расчёт в фоне';
+    els.oddsRows.innerHTML = '<div class="odds-loading"><i></i><span>Перебираем возможные карты…</span></div>';
+    return;
+  }
+
+  if (status === 'error' || !result) {
+    els.oddsWinChance.textContent = '—';
+    els.oddsSummaryMeta.textContent = 'расчёт недоступен';
+    els.oddsPanelMeta.textContent = 'Ошибка';
+    els.oddsRows.innerHTML = '<p class="odds-placeholder">' + (error || 'Не удалось рассчитать вероятности.') + '</p>';
+    return;
+  }
+
+  const prefix = result.exact ? '' : '≈';
+  els.oddsWinChance.textContent = prefix + formatOddsPercent(result.winProbability, result.exact);
+  els.oddsSummaryMeta.textContent = result.drawCount
+    ? 'если заменить: ' + result.drawCount
+    : state.phase === 'result' ? 'итог раздачи' : 'оставить все карты';
+  els.oddsPanelMeta.textContent = oddsMeta(result);
+  els.oddsRows.innerHTML = ODDS_LABELS.map(item => {
+    const probability = result.probabilities[item.key];
+    const percent = Math.max(0, Math.min(100, probability * 100));
+    return '<div class="odds-row" data-odds-key="' + item.key + '">' +
+      '<span>' + item.name + '</span>' +
+      '<i class="odds-meter"><b style="--odds-width:' + percent + '%"></b></i>' +
+      '<strong>' + formatOddsPercent(probability, result.exact) + '</strong>' +
+    '</div>';
+  }).join('');
+}
+
+function resultOdds() {
+  const key = state.resultKey || 'none';
+  const counts = Object.fromEntries(ODDS_LABELS.map(item => [item.key, item.key === key ? 1 : 0]));
+  const probabilities = { ...counts };
+  return {
+    exact: true,
+    drawCount: 0,
+    totalOutcomes: 1,
+    evaluatedOutcomes: 1,
+    counts,
+    probabilities,
+    winProbability: key === 'none' ? 0 : 1
+  };
+}
+
+function requestOdds() {
+  stopOddsCalculation();
+  const requestId = ++oddsRequestId;
+
+  if (state.hand.length !== 7) {
+    state.odds = { status: 'idle', result: null, error: '' };
+    renderOdds();
+    return;
+  }
+
+  if (state.phase === 'result') {
+    state.odds = { status: 'done', result: resultOdds(), error: '' };
+    renderOdds();
+    return;
+  }
+
+  state.odds = { status: 'loading', result: null, error: '' };
+  renderOdds();
+  const payload = {
+    requestId,
+    hand: state.hand,
+    selected: [...state.selected],
+    sampleSize: 200000
+  };
+
+  const acceptResult = message => {
+    if (message.requestId !== oddsRequestId) return;
+    stopOddsCalculation();
+    state.odds = message.error
+      ? { status: 'error', result: null, error: message.error }
+      : { status: 'done', result: message.result, error: '' };
+    renderOdds();
+  };
+
+  if ('Worker' in window) {
+    oddsWorker = new Worker(new URL('./probability-worker.js', import.meta.url), { type: 'module' });
+    oddsWorker.addEventListener('message', event => acceptResult(event.data));
+    oddsWorker.addEventListener('error', () => acceptResult({
+      requestId,
+      error: 'Фоновый расчёт не запустился.'
+    }), { once: true });
+    oddsWorker.postMessage(payload);
+    return;
+  }
+
+  oddsFallbackTimer = setTimeout(() => {
+    try {
+      acceptResult({ requestId, result: calculateHandOdds(payload) });
+    } catch (error) {
+      acceptResult({
+        requestId,
+        error: error instanceof Error ? error.message : 'Не удалось рассчитать вероятности.'
+      });
+    }
+  }, 0);
 }
 
 // Render the seven-card hand for ready, selection and result states.
@@ -295,6 +451,7 @@ async function startHand() {
   state.deck = shuffle(makeDeck());
   state.hand = Array.from({ length: 7 }, draw);
   state.handHint = analyzeHandHints(state.hand);
+  requestOdds();
   setMessage(state.handHint.label, state.handHint.madeIndices.length ? 'made-hint' : '');
   renderCards(true);
   render();
@@ -311,6 +468,9 @@ async function startHand() {
 async function finishHand() {
   state.busy = true;
   state.handHint = null;
+  stopOddsCalculation();
+  state.odds = { status: 'loading', result: null, error: '' };
+  renderOdds();
   render();
   const replaced = [];
   state.hand = state.hand.map((card, index) => {
@@ -351,6 +511,7 @@ async function finishHand() {
   state.busy = false;
   renderCards(false);
   render();
+  requestOdds();
   save();
 }
 
@@ -366,6 +527,7 @@ function toggleHold(index) {
     selectedCount ? '' : state.handHint.madeIndices.length ? 'made-hint' : ''
   );
   render();
+  requestOdds();
 }
 
 // Stakes may change between rounds, never while the player is choosing cards.
@@ -429,6 +591,11 @@ document.addEventListener('click', event => {
   els.utilityDock.classList.remove('open');
   els.utilityToggle.setAttribute('aria-expanded', 'false');
 });
+document.addEventListener('click', event => {
+  if (els.oddsWidget.open && !els.oddsWidget.contains(event.target)) {
+    els.oddsWidget.open = false;
+  }
+});
 els.helpButton.addEventListener('click', () => els.helpDialog.showModal());
 els.closeHelp.addEventListener('click', () => els.helpDialog.close());
 els.helpDialog.addEventListener('click', event => {
@@ -487,6 +654,7 @@ els.resetButton.addEventListener('click', () => {
   state.resultKey = null;
   state.history = [];
   setMessage('Выберите ставку и раздавайте');
+  requestOdds();
   renderCards();
   render();
   save();
@@ -502,6 +670,7 @@ els.depositButton.addEventListener('click', () => {
 
 window.addEventListener('keydown', event => {
   if (els.helpDialog.open) return;
+  if (event.key === 'Escape' && els.oddsWidget.open) els.oddsWidget.open = false;
   if (/^[1-7]$/.test(event.key)) toggleHold(Number(event.key) - 1);
   if ((event.key === 'Enter' || event.key === ' ') && event.target === document.body) {
     event.preventDefault();
@@ -513,3 +682,4 @@ window.addEventListener('keydown', event => {
 buildPaytable();
 renderCards();
 render();
+requestOdds();
