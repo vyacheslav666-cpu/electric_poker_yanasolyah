@@ -34,16 +34,15 @@ const els = {
   settingsButton: document.querySelector('#settingsButton'),
   settingsDialog: document.querySelector('#settingsDialog'),
   closeSettings: document.querySelector('#closeSettings'),
-  soundButton: document.querySelector('#soundButton'),
-  musicButton: document.querySelector('#musicButton'),
-  musicState: document.querySelector('#musicState'),
-  soundState: document.querySelector('#soundState'),
-  previousTrack: document.querySelector('#previousTrack'),
-  nextTrack: document.querySelector('#nextTrack'),
-  trackCounter: document.querySelector('#trackCounter'),
-  trackTitle: document.querySelector('#trackTitle'),
-  trackSubtitle: document.querySelector('#trackSubtitle'),
-  equalizer: document.querySelector('#equalizer'),
+  soundButtons: [...document.querySelectorAll('[data-sound-toggle]')],
+  musicButtons: [...document.querySelectorAll('[data-music-toggle]')],
+  musicStates: [...document.querySelectorAll('[data-music-state]')],
+  soundStates: [...document.querySelectorAll('[data-sound-state]')],
+  trackButtons: [...document.querySelectorAll('[data-track-direction]')],
+  trackCounters: [...document.querySelectorAll('[data-track-counter]')],
+  trackTitles: [...document.querySelectorAll('[data-track-title]')],
+  trackSubtitles: [...document.querySelectorAll('[data-track-subtitle]')],
+  equalizers: [...document.querySelectorAll('[data-equalizer]')],
   cardThemeChoices: [...document.querySelectorAll('[data-card-theme-choice]')],
   cardBackChoices: [...document.querySelectorAll('[data-card-back-choice]')],
   tableThemeChoices: [...document.querySelectorAll('[data-table-theme-choice]')],
@@ -299,14 +298,22 @@ function render() {
   els.bet.textContent = bet;
   els.topBet.textContent = bet;
   els.win.textContent = state.lastWin.toLocaleString('ru-RU');
-  els.musicButton.setAttribute('aria-pressed', String(state.music));
-  els.soundButton.setAttribute('aria-pressed', String(state.sound));
-  els.musicState.textContent = state.music ? 'Вкл.' : 'Выкл.';
-  els.soundState.textContent = state.sound ? 'Вкл.' : 'Выкл.';
-  els.trackCounter.textContent = `${String(trackIndex + 1).padStart(2, '0')} / ${String(MUSIC_TRACKS.length).padStart(2, '0')}`;
-  els.trackTitle.textContent = track.title;
-  els.trackSubtitle.textContent = `${track.subtitle} · ${track.bpm} BPM`;
-  els.equalizer.classList.toggle('playing', state.music);
+  els.musicButtons.forEach(button => {
+    button.setAttribute('aria-pressed', String(state.music));
+    button.classList.toggle('is-on', state.music);
+  });
+  els.soundButtons.forEach(button => {
+    button.setAttribute('aria-pressed', String(state.sound));
+    button.classList.toggle('is-on', state.sound);
+  });
+  els.musicStates.forEach(node => { node.textContent = state.music ? 'Вкл.' : 'Выкл.'; });
+  els.soundStates.forEach(node => { node.textContent = state.sound ? 'Вкл.' : 'Выкл.'; });
+  els.trackCounters.forEach(node => {
+    node.textContent = `${String(trackIndex + 1).padStart(2, '0')} / ${String(MUSIC_TRACKS.length).padStart(2, '0')}`;
+  });
+  els.trackTitles.forEach(node => { node.textContent = track.title; });
+  els.trackSubtitles.forEach(node => { node.textContent = `${track.subtitle} · ${track.bpm} BPM`; });
+  els.equalizers.forEach(node => { node.classList.toggle('playing', state.music); });
   document.body.dataset.cardTheme = state.cardTheme;
   document.body.dataset.cardBack = state.cardBack;
   document.body.dataset.tableTheme = state.tableTheme;
@@ -617,8 +624,9 @@ els.closeSettings.addEventListener('click', () => els.settingsDialog.close());
 els.settingsDialog.addEventListener('click', event => {
   if (event.target === els.settingsDialog) els.settingsDialog.close();
 });
-els.previousTrack.addEventListener('click', () => changeMusicTrack(-1));
-els.nextTrack.addEventListener('click', () => changeMusicTrack(1));
+els.trackButtons.forEach(button => {
+  button.addEventListener('click', () => changeMusicTrack(Number(button.dataset.trackDirection)));
+});
 els.cardThemeChoices.forEach(button => {
   button.addEventListener('click', () => setVisualPreference('cardTheme', button.dataset.cardThemeChoice, CARD_THEMES));
 });
@@ -628,18 +636,22 @@ els.cardBackChoices.forEach(button => {
 els.tableThemeChoices.forEach(button => {
   button.addEventListener('click', () => setVisualPreference('tableTheme', button.dataset.tableThemeChoice, TABLE_THEMES));
 });
-els.soundButton.addEventListener('click', () => {
-  state.sound = !state.sound;
-  if (state.sound) playTone('click');
-  save();
-  render();
+els.soundButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    state.sound = !state.sound;
+    if (state.sound) playTone('click');
+    save();
+    render();
+  });
 });
-els.musicButton.addEventListener('click', () => {
-  state.music = !state.music;
-  if (state.music) startMusic();
-  else stopMusic();
-  save();
-  render();
+els.musicButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    state.music = !state.music;
+    if (state.music) startMusic();
+    else stopMusic();
+    save();
+    render();
+  });
 });
 els.resetButton.addEventListener('click', () => {
   if (!confirm('Вернуть баланс 1000 кредитов и начать заново?')) return;
