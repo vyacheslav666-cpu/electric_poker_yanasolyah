@@ -26,4 +26,33 @@ export const PAYOUTS = [
   { key: 'two-pair', name: 'Две пары', multiplier: 2 },
   { key: 'jacks', name: 'Валеты или лучше', multiplier: 1 }
 ];
+
+// Music is generated in the browser, so every track is original, lightweight
+// and available offline without shipping copyrighted audio files.
+export const MUSIC_TRACKS = [
+  { id: 'velvet-shuffle', title: 'Velvet Shuffle', subtitle: 'мягкий casino jazz', bpm: 104 },
+  { id: 'neon-bossa', title: 'Neon Bossa', subtitle: 'ночная bossa nova', bpm: 116 },
+  { id: 'midnight-drive', title: 'Midnight Drive', subtitle: 'электро-лаунж', bpm: 92 },
+  { id: 'high-roller', title: 'High Roller', subtitle: 'яркий big-room swing', bpm: 132 }
+];
+
+export const CARD_THEMES = [
+  { id: 'ivory', title: 'Ivory', subtitle: 'классика казино' },
+  { id: 'neon', title: 'Neon', subtitle: 'тёмный киберпанк' },
+  { id: 'noir', title: 'Noir', subtitle: 'чёрное золото' }
+];
+
+export const CARD_BACKS = [
+  { id: 'royal', title: 'Royal' },
+  { id: 'circuit', title: 'Circuit' },
+  { id: 'emerald', title: 'Emerald' }
+];
+
+export const TABLE_THEMES = [
+  { id: 'emerald-room', title: 'Emerald', subtitle: 'классический зелёный' },
+  { id: 'neon-vegas', title: 'Neon Vegas', subtitle: 'фиолетовый неон' },
+  { id: 'ruby-royale', title: 'Ruby Royale', subtitle: 'красный бархат' },
+  { id: 'ocean-club', title: 'Ocean Club', subtitle: 'лазурный лаунж' }
+];
+
 export const STORAGE_KEY = 'electropoker-save-v1';

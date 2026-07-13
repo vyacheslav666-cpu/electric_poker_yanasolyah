@@ -47,8 +47,7 @@
     <div class="utility-dock" id="utilityDock">
       <div class="footer-actions" id="utilityActions">
         <button class="text-button" id="historyButton">История</button>
-        <button class="text-button" id="musicButton">Музыка: вкл.</button>
-        <button class="text-button" id="soundButton">Звук: вкл.</button>
+        <button class="text-button atmosphere-button" id="settingsButton">Атмосфера</button>
         <button class="text-button" id="depositButton">Додеп +1000</button>
         <button class="text-button" id="resetButton">Сброс</button>
         <button class="text-button" id="helpButton">Справка</button>
@@ -92,6 +91,112 @@
     </div>
   </dialog>
 
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+    <div class="modal-body settings-modal">
+      <div class="settings-heading">
+        <div>
+          <p class="settings-kicker">Музыка и настроение</p>
+          <h2 id="settingsTitle">Атмосфера</h2>
+        </div>
+        <span class="live-badge"><i aria-hidden="true"></i> Live mix</span>
+      </div>
+
+      <section class="music-console" aria-labelledby="musicConsoleTitle">
+        <div class="console-label">
+          <span id="musicConsoleTitle">Сейчас играет</span>
+          <span id="trackCounter">01 / 04</span>
+        </div>
+        <div class="track-picker">
+          <button class="track-arrow" id="previousTrack" type="button" aria-label="Предыдущий трек">‹</button>
+          <div class="track-copy" aria-live="polite">
+            <strong id="trackTitle">Velvet Shuffle</strong>
+            <small id="trackSubtitle">мягкий casino jazz</small>
+          </div>
+          <button class="track-arrow" id="nextTrack" type="button" aria-label="Следующий трек">›</button>
+        </div>
+        <div class="equalizer" id="equalizer" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </section>
+
+      <div class="audio-toggles">
+        <button class="setting-toggle" id="musicButton" type="button" aria-pressed="false">
+          <span><i class="setting-icon" aria-hidden="true">♫</i> Музыка</span>
+          <strong id="musicState">Выкл.</strong>
+        </button>
+        <button class="setting-toggle" id="soundButton" type="button" aria-pressed="true">
+          <span><i class="setting-icon" aria-hidden="true">✦</i> Звуки игры</span>
+          <strong id="soundState">Вкл.</strong>
+        </button>
+      </div>
+
+      <section class="appearance-section" aria-labelledby="cardsStyleTitle">
+        <div class="preference-heading">
+          <div>
+            <span class="preference-index">01</span>
+            <h3 id="cardsStyleTitle">Стиль карт</h3>
+          </div>
+          <small>лицо и рубашка отдельно</small>
+        </div>
+
+        <p class="choice-label">Лицевая сторона</p>
+        <div class="card-theme-grid" role="group" aria-label="Стиль лицевой стороны карт">
+          <button class="visual-choice" type="button" data-card-theme-choice="ivory" aria-pressed="true">
+            <span class="mini-card ivory"><b>A</b><i>♠</i></span>
+            <span><strong>Ivory</strong><small>классика</small></span>
+          </button>
+          <button class="visual-choice" type="button" data-card-theme-choice="neon" aria-pressed="false">
+            <span class="mini-card neon"><b>K</b><i>♥</i></span>
+            <span><strong>Neon</strong><small>киберпанк</small></span>
+          </button>
+          <button class="visual-choice" type="button" data-card-theme-choice="noir" aria-pressed="false">
+            <span class="mini-card noir"><b>Q</b><i>♦</i></span>
+            <span><strong>Noir</strong><small>black gold</small></span>
+          </button>
+        </div>
+
+        <p class="choice-label">Рубашка</p>
+        <div class="card-back-grid" role="group" aria-label="Стиль рубашки карт">
+          <button class="back-choice" type="button" data-card-back-choice="royal" aria-label="Рубашка Royal" aria-pressed="true"><i class="mini-back royal">7</i><span>Royal</span></button>
+          <button class="back-choice" type="button" data-card-back-choice="circuit" aria-label="Рубашка Circuit" aria-pressed="false"><i class="mini-back circuit">7</i><span>Circuit</span></button>
+          <button class="back-choice" type="button" data-card-back-choice="emerald" aria-label="Рубашка Emerald" aria-pressed="false"><i class="mini-back emerald">7</i><span>Emerald</span></button>
+        </div>
+      </section>
+
+      <section class="appearance-section table-appearance-section" aria-labelledby="tableStyleTitle">
+        <div class="preference-heading">
+          <div>
+            <span class="preference-index">02</span>
+            <h3 id="tableStyleTitle">Игровой зал</h3>
+          </div>
+          <small>стол, корпус и свет</small>
+        </div>
+        <div class="table-theme-grid" role="group" aria-label="Оформление игрового стола">
+          <button class="table-choice" type="button" data-table-theme-choice="emerald-room" aria-pressed="true">
+            <i class="table-swatch emerald-room"><b></b></i>
+            <span><strong>Emerald</strong><small>классика</small></span>
+          </button>
+          <button class="table-choice" type="button" data-table-theme-choice="neon-vegas" aria-pressed="false">
+            <i class="table-swatch neon-vegas"><b></b></i>
+            <span><strong>Neon Vegas</strong><small>ультрафиолет</small></span>
+          </button>
+          <button class="table-choice" type="button" data-table-theme-choice="ruby-royale" aria-pressed="false">
+            <i class="table-swatch ruby-royale"><b></b></i>
+            <span><strong>Ruby Royale</strong><small>красный бархат</small></span>
+          </button>
+          <button class="table-choice" type="button" data-table-theme-choice="ocean-club" aria-pressed="false">
+            <i class="table-swatch ocean-club"><b></b></i>
+            <span><strong>Ocean Club</strong><small>лазурный свет</small></span>
+          </button>
+        </div>
+      </section>
+
+      <p class="settings-note">Четыре оригинальных микса генерируются прямо в браузере и работают офлайн.</p>
+      <button class="main-button modal-close" id="closeSettings">Готово</button>
+    </div>
+  </dialog>
+
+  <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status"></div>
 
   <script type="module" src="js/app.js"></script>

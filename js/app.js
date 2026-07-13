@@ -4,8 +4,8 @@
  * `state` is the single source of truth for the current session. Poker rules,
  * persistence and sound stay in separate modules so they do not depend on DOM.
  */
-import { PAYOUTS } from './config.js';
-import { configureAudio, playTone, startMusic, stopMusic } from './audio.js';
+import { CARD_BACKS, CARD_THEMES, MUSIC_TRACKS, PAYOUTS, TABLE_THEMES } from './config.js';
+import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from './audio.js';
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
 // Cache the DOM once; render functions update these nodes throughout a round.
@@ -30,13 +30,28 @@ const els = {
   historyDialog: document.querySelector('#historyDialog'),
   historyList: document.querySelector('#historyList'),
   closeHistory: document.querySelector('#closeHistory'),
+  settingsButton: document.querySelector('#settingsButton'),
+  settingsDialog: document.querySelector('#settingsDialog'),
+  closeSettings: document.querySelector('#closeSettings'),
   soundButton: document.querySelector('#soundButton'),
   musicButton: document.querySelector('#musicButton'),
+  musicState: document.querySelector('#musicState'),
+  soundState: document.querySelector('#soundState'),
+  previousTrack: document.querySelector('#previousTrack'),
+  nextTrack: document.querySelector('#nextTrack'),
+  trackCounter: document.querySelector('#trackCounter'),
+  trackTitle: document.querySelector('#trackTitle'),
+  trackSubtitle: document.querySelector('#trackSubtitle'),
+  equalizer: document.querySelector('#equalizer'),
+  cardThemeChoices: [...document.querySelectorAll('[data-card-theme-choice]')],
+  cardBackChoices: [...document.querySelectorAll('[data-card-back-choice]')],
+  tableThemeChoices: [...document.querySelectorAll('[data-table-theme-choice]')],
   resetButton: document.querySelector('#resetButton'),
   depositButton: document.querySelector('#depositButton'),
   utilityDock: document.querySelector('#utilityDock'),
   utilityToggle: document.querySelector('#utilityToggle'),
   utilityActions: document.querySelector('#utilityActions'),
+  fxLayer: document.querySelector('#fxLayer'),
   toast: document.querySelector('#toast')
 };
 
@@ -50,6 +65,10 @@ const state = {
   bet: loaded.bet,
   sound: loaded.sound,
   music: loaded.music,
+  musicTrack: loaded.musicTrack,
+  cardTheme: loaded.cardTheme,
+  cardBack: loaded.cardBack,
+  tableTheme: loaded.tableTheme,
   deck: [],
   hand: [],
   selected: Array(7).fill(false),
@@ -90,7 +109,8 @@ function renderCards(animate = false, animatedIndices = null) {
     if (state.selected[index]) button.classList.add('selected');
     if (animate && (!animatedIndices || animatedIndices.includes(index))) {
       button.classList.add(animatedIndices ? 'redrawing' : 'dealing');
-      button.style.animationDelay = `${index * 70}ms`;
+      const animationOrder = animatedIndices ? animatedIndices.indexOf(index) : index;
+      button.style.setProperty('--card-delay', String(animationOrder * 85) + 'ms');
     }
     if (state.phase === 'result' && state.winningIndices.includes(index)) {
       button.classList.add('winner');
@@ -101,12 +121,15 @@ function renderCards(animate = false, animatedIndices = null) {
     button.setAttribute('aria-pressed', state.selected[index] ? 'true' : 'false');
 
     if (!card) {
-      button.innerHTML = '<span class="card-back" aria-hidden="true"></span>';
+      button.innerHTML = '<span class="card-inner"><span class="card-back" aria-hidden="true"></span></span>';
     } else {
-      button.innerHTML = `<span class="card-face ${card.color}">
-        <span class="card-rank">${card.label}<small>${card.symbol}</small></span>
-        <span class="card-suit" aria-hidden="true">${card.symbol}</span>
-      </span>`;
+      button.innerHTML = '<span class="card-inner has-card">' +
+        '<span class="card-back" aria-hidden="true"></span>' +
+        '<span class="card-face ' + card.color + '">' +
+          '<span class="card-rank">' + card.label + '<small>' + card.symbol + '</small></span>' +
+          '<span class="card-suit" aria-hidden="true">' + card.symbol + '</span>' +
+        '</span>' +
+      '</span>';
     }
     els.cards.append(button);
   }
@@ -114,12 +137,32 @@ function renderCards(animate = false, animatedIndices = null) {
 
 function render() {
   const bet = state.bet;
+  const trackIndex = Math.max(0, MUSIC_TRACKS.findIndex(track => track.id === state.musicTrack));
+  const track = MUSIC_TRACKS[trackIndex];
   els.balance.textContent = state.balance.toLocaleString('ru-RU');
   els.bet.textContent = bet;
   els.topBet.textContent = bet;
   els.win.textContent = state.lastWin.toLocaleString('ru-RU');
-  els.soundButton.textContent = `Звук: ${state.sound ? 'вкл.' : 'выкл.'}`;
-  els.musicButton.textContent = `Музыка: ${state.music ? 'вкл.' : 'выкл.'}`;
+  els.musicButton.setAttribute('aria-pressed', String(state.music));
+  els.soundButton.setAttribute('aria-pressed', String(state.sound));
+  els.musicState.textContent = state.music ? 'Вкл.' : 'Выкл.';
+  els.soundState.textContent = state.sound ? 'Вкл.' : 'Выкл.';
+  els.trackCounter.textContent = `${String(trackIndex + 1).padStart(2, '0')} / ${String(MUSIC_TRACKS.length).padStart(2, '0')}`;
+  els.trackTitle.textContent = track.title;
+  els.trackSubtitle.textContent = `${track.subtitle} · ${track.bpm} BPM`;
+  els.equalizer.classList.toggle('playing', state.music);
+  document.body.dataset.cardTheme = state.cardTheme;
+  document.body.dataset.cardBack = state.cardBack;
+  document.body.dataset.tableTheme = state.tableTheme;
+  els.cardThemeChoices.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.cardThemeChoice === state.cardTheme));
+  });
+  els.cardBackChoices.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.cardBackChoice === state.cardBack));
+  });
+  els.tableThemeChoices.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.tableThemeChoice === state.tableTheme));
+  });
   els.betDown.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betHalf.disabled = state.phase === 'holding' || state.busy || state.bet <= 10;
   els.betUp.disabled = state.phase === 'holding' || state.busy;
@@ -139,10 +182,16 @@ function render() {
 // combination to have its own colour and animation without branching in JS.
 function setMessage(text, kind = '') {
   els.message.textContent = text;
-  els.message.className = `message${kind ? ` ${kind}` : ''}`;
-  els.cabinet.classList.toggle('jackpot', kind === 'win');
+  els.message.className = 'message' + (kind ? ' ' + kind : '');
+  const payout = PAYOUTS.find(item => item.key === state.resultKey);
+  const multiplier = payout?.multiplier || 0;
+  const isWin = kind === 'win';
+  const winTier = multiplier >= 25 ? 'jackpot' : multiplier >= 4 ? 'big' : 'win';
+  els.cabinet.classList.toggle('celebration', isWin);
+  els.cabinet.classList.toggle('jackpot', isWin && multiplier >= 25);
+  els.cabinet.dataset.winTier = isWin ? winTier : '';
   PAYOUTS.forEach(item => {
-    els.cabinet.classList.toggle(`result-${item.key}`, kind === 'win' && state.resultKey === item.key);
+    els.cabinet.classList.toggle('result-' + item.key, isWin && state.resultKey === item.key);
   });
 }
 
@@ -175,7 +224,57 @@ function renderHistory() {
     </article>`).join('');
 }
 
-function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function waitForCardAnimations(selector, fallbackMs) {
+  const animatedCards = [...els.cards.querySelectorAll(selector)];
+  if (!animatedCards.length) return Promise.resolve();
+  const lastCard = animatedCards[animatedCards.length - 1];
+  return new Promise(resolve => {
+    let finished = false;
+    const complete = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(fallbackTimer);
+      resolve();
+    };
+    const fallbackTimer = setTimeout(complete, fallbackMs);
+    lastCard.addEventListener('animationend', complete, { once: true });
+    lastCard.addEventListener('animationcancel', complete, { once: true });
+  });
+}
+
+let celebrationTimer;
+function clearCelebration() {
+  clearTimeout(celebrationTimer);
+  delete document.body.dataset.celebration;
+  els.fxLayer.replaceChildren();
+}
+
+function launchCelebration(multiplier) {
+  clearCelebration();
+  const tier = multiplier >= 25 ? 'jackpot' : multiplier >= 4 ? 'big' : 'win';
+  const particleCount = tier === 'jackpot' ? 72 : tier === 'big' ? 44 : 24;
+  const palette = ['#fff2a1', '#ff4f9b', '#5ff7ff', '#8d6bff', '#61ffb0'];
+  const fragment = document.createDocumentFragment();
+  document.body.dataset.celebration = tier;
+  els.win.classList.remove('score-pop');
+  void els.win.offsetWidth;
+  els.win.classList.add('score-pop');
+
+  for (let index = 0; index < particleCount; index++) {
+    const particle = document.createElement('i');
+    particle.className = 'fx-particle';
+    particle.style.setProperty('--particle-x', String(Math.random() * 100) + 'vw');
+    particle.style.setProperty('--particle-drift', String((Math.random() - .5) * 26) + 'vw');
+    particle.style.setProperty('--particle-delay', String(Math.random() * 420) + 'ms');
+    particle.style.setProperty('--particle-duration', String(1450 + Math.random() * 1100) + 'ms');
+    particle.style.setProperty('--particle-spin', String(360 + Math.random() * 720) + 'deg');
+    particle.style.setProperty('--particle-color', palette[index % palette.length]);
+    fragment.append(particle);
+  }
+
+  els.fxLayer.append(fragment);
+  celebrationTimer = setTimeout(clearCelebration, tier === 'jackpot' ? 3200 : 2600);
+}
 
 // Round state: ready → holding → result.
 async function startHand() {
@@ -186,6 +285,7 @@ async function startHand() {
     return;
   }
   state.busy = true;
+  clearCelebration();
   state.phase = 'holding';
   state.balance -= bet;
   state.lastWin = 0;
@@ -200,7 +300,7 @@ async function startHand() {
   render();
   playTone('deal');
   save();
-  await delay(470);
+  await waitForCardAnimations('.card-slot.dealing', 1700);
   state.busy = false;
   renderCards(false);
   render();
@@ -221,7 +321,7 @@ async function finishHand() {
   state.selected.fill(false);
   renderCards(true, replaced);
   playTone('draw');
-  await delay(Math.max(320, replaced.length * 75));
+  await waitForCardAnimations('.card-slot.redrawing', 1450);
 
   const result = evaluateSeven(state.hand);
   state.phase = 'result';
@@ -232,7 +332,8 @@ async function finishHand() {
     state.balance += state.lastWin;
     setWinMessage(result.payout.name, state.lastWin);
     if (navigator.vibrate) navigator.vibrate([55, 35, 70, 35, 110]);
-    playTone('win');
+    launchCelebration(result.payout.multiplier);
+    playTone(result.payout.multiplier >= 25 ? 'jackpot' : result.payout.multiplier >= 4 ? 'bigWin' : 'win');
   } else {
     state.lastWin = 0;
     setMessage('Комбинации нет', 'lose');
@@ -281,6 +382,24 @@ function adjustBet(action) {
   save();
 }
 
+function changeMusicTrack(direction) {
+  const currentIndex = Math.max(0, MUSIC_TRACKS.findIndex(track => track.id === state.musicTrack));
+  const nextIndex = (currentIndex + direction + MUSIC_TRACKS.length) % MUSIC_TRACKS.length;
+  state.musicTrack = MUSIC_TRACKS[nextIndex].id;
+  setMusicTrack(state.musicTrack);
+  playTone('click');
+  save();
+  render();
+}
+
+function setVisualPreference(key, value, options) {
+  if (!options.some(option => option.id === value)) return;
+  state[key] = value;
+  playTone('click');
+  save();
+  render();
+}
+
 let toastTimer;
 function showToast(text) {
   clearTimeout(toastTimer);
@@ -322,6 +441,25 @@ els.historyButton.addEventListener('click', () => {
 els.closeHistory.addEventListener('click', () => els.historyDialog.close());
 els.historyDialog.addEventListener('click', event => {
   if (event.target === els.historyDialog) els.historyDialog.close();
+});
+els.settingsButton.addEventListener('click', () => {
+  els.settingsDialog.showModal();
+  playTone('click');
+});
+els.closeSettings.addEventListener('click', () => els.settingsDialog.close());
+els.settingsDialog.addEventListener('click', event => {
+  if (event.target === els.settingsDialog) els.settingsDialog.close();
+});
+els.previousTrack.addEventListener('click', () => changeMusicTrack(-1));
+els.nextTrack.addEventListener('click', () => changeMusicTrack(1));
+els.cardThemeChoices.forEach(button => {
+  button.addEventListener('click', () => setVisualPreference('cardTheme', button.dataset.cardThemeChoice, CARD_THEMES));
+});
+els.cardBackChoices.forEach(button => {
+  button.addEventListener('click', () => setVisualPreference('cardBack', button.dataset.cardBackChoice, CARD_BACKS));
+});
+els.tableThemeChoices.forEach(button => {
+  button.addEventListener('click', () => setVisualPreference('tableTheme', button.dataset.tableThemeChoice, TABLE_THEMES));
 });
 els.soundButton.addEventListener('click', () => {
   state.sound = !state.sound;
