@@ -2974,3 +2974,210 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
 @media (prefers-reduced-motion: reduce) {
   .quick-equalizer.playing i { animation: none; }
 }
+
+
+/* Tactile selection: depress, spring, stamp and a short felt burst. */
+.card-slot {
+  --selection-lift: -12px;
+  --selection-return: 12px;
+  --selection-tilt: -1.5deg;
+}
+
+.card-slot.selected,
+.card-slot.selected.active:hover {
+  z-index: 8;
+  filter: none;
+  transform: translateY(var(--selection-lift)) rotate(var(--selection-tilt));
+}
+
+.card-slot.active:active .card-inner {
+  transform: scale(.955);
+  transition: transform .06s ease-out;
+}
+
+.card-slot.selection-pick {
+  z-index: 10;
+  animation: tactileSelectionHalo .46s ease-out both;
+}
+.card-slot.selection-release {
+  z-index: 9;
+  animation: tactileReleaseHalo .34s ease-out both;
+}
+
+.card-slot.selection-pick .card-inner {
+  animation: tactileInnerPick .46s cubic-bezier(.16, .88, .24, 1.22) both;
+}
+.card-slot.selection-release .card-inner {
+  animation: tactileInnerRelease .34s cubic-bezier(.24, .72, .28, 1.12) both;
+}
+.card-slot.selection-release.active:hover .card-inner {
+  animation-name: tactileInnerReleaseHover;
+}
+
+.card-slot.selected .card-face::after {
+  content: "";
+  position: absolute;
+  z-index: 5;
+  inset: 3px;
+  border: 2px solid rgba(255, 91, 151, .92);
+  border-radius: calc(clamp(8px, 1.4vw, 14px) - 2px);
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 10px rgba(255, 72, 137, .45),
+    inset 0 0 24px rgba(95, 247, 255, .12),
+    0 0 8px rgba(255, 91, 151, .72);
+  animation: selectedLightTrace .92s ease-in-out infinite alternate;
+}
+
+.card-slot.selection-pick.selected::after {
+  animation: tactileSelectionTag .46s cubic-bezier(.16, .88, .24, 1.22) both;
+}
+
+.selection-burst {
+  position: absolute;
+  z-index: 150;
+  left: var(--selection-x);
+  top: var(--selection-y);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.selection-burst::before,
+.selection-burst::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #ff5b97;
+  border-radius: 50%;
+  box-shadow: 0 0 14px #ff4d91, inset 0 0 12px rgba(95, 247, 255, .35);
+  transform: translate(-50%, -50%);
+  animation: selectionRing .52s cubic-bezier(.12, .72, .18, 1) both;
+}
+.selection-burst::after {
+  width: 16px;
+  height: 16px;
+  border-color: #fff0a0;
+  animation-delay: 55ms;
+}
+.selection-burst.releasing::before,
+.selection-burst.releasing::after {
+  border-color: #5ff7ff;
+  box-shadow: 0 0 12px #5ff7ff, inset 0 0 10px rgba(255, 240, 160, .28);
+  animation-name: selectionReleaseRing;
+}
+
+.selection-spark {
+  position: absolute;
+  left: -2px;
+  top: -5px;
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff7bd, #ff4f98 58%, #5ff7ff);
+  box-shadow: 0 0 8px #ff5b97;
+  transform-origin: 2px 5px;
+  animation: selectionSpark .54s cubic-bezier(.12, .72, .2, 1) var(--spark-delay) both;
+}
+.selection-burst.releasing .selection-spark {
+  height: 7px;
+  background: linear-gradient(180deg, #fff, #5ff7ff);
+  box-shadow: 0 0 7px #5ff7ff;
+  animation-name: selectionReleaseSpark;
+  animation-duration: .38s;
+}
+
+@keyframes tactileInnerPick {
+  0% { transform: translateY(var(--selection-return)) scale(.95); }
+  38% { transform: translateY(-8px) scale(1.065); }
+  68% { transform: translateY(4px) scale(.985); }
+  84% { transform: translateY(-2px) scale(1.018); }
+  100% { transform: none; }
+}
+@keyframes tactileInnerRelease {
+  0% { transform: translateY(var(--selection-lift)) rotate(var(--selection-tilt)) scale(1.02); }
+  46% { transform: translateY(4px) rotate(.6deg) scale(.955); }
+  74% { transform: translateY(-2px) rotate(-.2deg) scale(1.018); }
+  100% { transform: none; }
+}
+@keyframes tactileInnerReleaseHover {
+  0% { transform: translateY(-4px) rotate(-2.2deg) scale(1.02); }
+  46% { transform: translateY(5px) rotate(.5deg) scale(.955); }
+  74% { transform: translateY(-2px) rotate(-.2deg) scale(1.018); }
+  100% { transform: none; }
+}
+@keyframes tactileSelectionHalo {
+  0% { box-shadow: 0 0 0 0 rgba(255, 54, 95, .68); }
+  55% {
+    box-shadow:
+      0 0 0 7px rgba(255, 54, 95, .16),
+      0 0 32px rgba(255, 54, 95, .72),
+      0 0 48px rgba(95, 247, 255, .2);
+  }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes tactileReleaseHalo {
+  0% { box-shadow: 0 0 24px rgba(95, 247, 255, .48); }
+  100% { box-shadow: 0 0 0 transparent; }
+}
+@keyframes selectedLightTrace {
+  from { opacity: .62; border-color: rgba(255, 91, 151, .72); }
+  to {
+    opacity: 1;
+    border-color: #fff1a6;
+    box-shadow:
+      inset 0 0 12px rgba(255, 72, 137, .58),
+      inset 0 0 28px rgba(95, 247, 255, .2),
+      0 0 11px #ff5b97,
+      0 0 22px rgba(95, 247, 255, .26);
+  }
+}
+@keyframes tactileSelectionTag {
+  0% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(.55); }
+  58% { opacity: 1; transform: translateX(-50%) translateY(-3px) scale(1.12); }
+  100% { transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes selectionRing {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.25); }
+  24% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3.15); }
+}
+@keyframes selectionReleaseRing {
+  0% { opacity: .9; transform: translate(-50%, -50%) scale(1.7); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(.35); }
+}
+@keyframes selectionSpark {
+  0% { opacity: 0; transform: rotate(var(--spark-angle)) translateY(-2px) scale(.3); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--spark-angle)) translateY(var(--spark-distance)) scale(.08); }
+}
+@keyframes selectionReleaseSpark {
+  0% { opacity: .9; transform: rotate(var(--spark-angle)) translateY(var(--spark-distance)) scale(.7); }
+  100% { opacity: 0; transform: rotate(var(--spark-angle)) translateY(-2px) scale(.05); }
+}
+
+@media (max-width: 680px) {
+  .card-slot {
+    --selection-lift: -10px;
+    --selection-return: 10px;
+  }
+  .selection-burst::before { width: 27px; height: 27px; }
+  .selection-burst::after { width: 13px; height: 13px; }
+}
+
+@media (hover: none) {
+  .card-slot.active:hover:not(.selected) { transform: none; filter: none; }
+  .card-slot.selection-release.active:hover .card-inner { animation-name: tactileInnerRelease; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-burst { display: none; }
+  .card-slot.active:active .card-inner { transform: none; transition: none; }
+  .card-slot.selection-pick,
+  .card-slot.selection-release,
+  .card-slot.selection-pick .card-inner,
+  .card-slot.selection-release .card-inner { animation: none !important; }
+}
