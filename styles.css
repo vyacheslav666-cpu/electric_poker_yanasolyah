@@ -3181,3 +3181,232 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
   .card-slot.selection-pick .card-inner,
   .card-slot.selection-release .card-inner { animation: none !important; }
 }
+
+/* Brand signature: a two-card 7-bolt emblem plus a compact desktop wordmark. */
+.topbar {
+  grid-template-columns: 176px minmax(180px, 1fr) auto;
+}
+
+.brand-logo {
+  position: relative;
+  width: 176px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 7px;
+  isolation: isolate;
+  filter: none;
+  user-select: none;
+}
+
+.brand-logo::before,
+.brand-logo::after {
+  content: none;
+  display: none;
+}
+
+.brand-emblem {
+  position: relative;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+
+.brand-emblem::before {
+  content: "";
+  position: absolute;
+  inset: 9px 4px 7px 7px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 78, 132, .24), rgba(72, 242, 255, .1) 48%, transparent 72%);
+  box-shadow: 0 0 18px rgba(76, 239, 255, .16);
+}
+
+.brand-emblem-svg {
+  width: 64px;
+  height: 52px;
+  overflow: visible;
+  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, .62)) drop-shadow(0 0 4px rgba(255, 85, 127, .2));
+  transform-origin: 50% 58%;
+  transition: transform .24s cubic-bezier(.2, .8, .2, 1), filter .24s ease;
+}
+
+.logo-card {
+  vector-effect: non-scaling-stroke;
+}
+
+.logo-card-back {
+  fill: #061c25;
+  stroke: #54efff;
+  stroke-width: 1.8;
+}
+
+.logo-circuit {
+  fill: none;
+  stroke: rgba(84, 239, 255, .78);
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logo-card-front {
+  fill: url(#brand-card-front);
+  stroke: #ff4f80;
+  stroke-width: 2;
+}
+
+.logo-card-inset {
+  fill: none;
+  stroke: rgba(255, 216, 102, .55);
+  stroke-width: 1;
+}
+
+.logo-seven-path {
+  fill: url(#brand-seven);
+  stroke: #fff4bd;
+  stroke-width: .75;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+.logo-diamond {
+  fill: #ff4f80;
+  stroke: #ffd86a;
+  stroke-width: .7;
+}
+
+.logo-trace {
+  fill: none;
+  stroke: #fff7c4;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 9 106;
+  animation: brandTrace 3.8s linear infinite;
+}
+
+.brand-wordmark {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  line-height: .84;
+  text-transform: uppercase;
+  transform: translateY(1px);
+}
+
+.brand-wordmark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 4px;
+  bottom: -5px;
+  height: 1px;
+  background: linear-gradient(90deg, #53efff, #ff4f80 58%, transparent);
+  box-shadow: 0 0 7px rgba(83, 239, 255, .5);
+}
+
+.brand-wordmark span {
+  color: #68f5ff;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: .57rem;
+  font-weight: 900;
+  letter-spacing: .27em;
+  text-shadow: 0 0 8px rgba(83, 239, 255, .45);
+}
+
+.brand-wordmark strong {
+  margin-top: 3px;
+  color: #ffe06f;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1.03rem;
+  font-weight: 950;
+  letter-spacing: .09em;
+  text-shadow: 1px 2px 0 #8d1734, 0 0 10px rgba(255, 215, 99, .38);
+  transition: letter-spacing .22s ease, color .22s ease, text-shadow .22s ease;
+}
+
+.brand-logo:hover .brand-emblem-svg {
+  transform: translateY(-1px) rotate(-1.5deg) scale(1.035);
+  filter: drop-shadow(0 8px 5px rgba(0, 0, 0, .65)) drop-shadow(0 0 7px rgba(255, 85, 127, .35));
+}
+
+.brand-logo:hover .brand-wordmark strong {
+  color: #fff1a5;
+  letter-spacing: .12em;
+  text-shadow: 1px 2px 0 #8d1734, 0 0 13px rgba(255, 215, 99, .58);
+}
+
+.brand-logo:hover .logo-trace {
+  animation-duration: 1.25s;
+}
+
+@keyframes brandTrace {
+  to { stroke-dashoffset: -115; }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 60px minmax(180px, 1fr) auto;
+  }
+
+  .brand-logo {
+    width: 60px;
+    height: 44px;
+    gap: 0;
+  }
+
+  .brand-wordmark {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .topbar {
+    grid-template-columns: 58px minmax(74px, 1fr) auto;
+  }
+
+  .brand-logo {
+    width: 58px;
+    height: 40px;
+  }
+
+  .brand-emblem {
+    transform: scale(.9);
+    transform-origin: left center;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar {
+    grid-template-columns: 54px minmax(76px, 1fr) auto;
+  }
+
+  .brand-logo {
+    width: 54px;
+  }
+
+  .brand-emblem {
+    transform: scale(.84);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-emblem-svg,
+  .brand-wordmark strong {
+    transition: none;
+  }
+
+  .logo-trace {
+    animation: none;
+    stroke-dasharray: none;
+    opacity: .72;
+  }
+
+  .brand-logo:hover .brand-emblem-svg {
+    transform: none;
+  }
+}
+
