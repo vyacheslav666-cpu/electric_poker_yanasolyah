@@ -16,23 +16,44 @@
         <span class="logo-suit">♦</span>
       </div>
 
-      <details class="odds-widget" id="oddsWidget">
-        <summary class="odds-summary" aria-label="Открыть вероятности комбинаций">
-          <span>Шанс выигрыша</span>
-          <strong id="oddsWinChance">—</strong>
-          <small id="oddsSummaryMeta">после раздачи</small>
-        </summary>
-        <section class="odds-panel" aria-label="Вероятности покерных комбинаций">
-          <div class="odds-panel-heading">
-            <div>
-              <span>Следующая рука</span>
-              <strong>Вероятности комбинаций</strong>
+      <section class="quick-player" aria-label="Музыкальный плеер">
+        <button class="quick-track-button" type="button" data-track-direction="-1" aria-label="Предыдущий трек">‹</button>
+        <button class="quick-music-button" type="button" data-music-toggle aria-pressed="false" aria-label="Включить или выключить музыку">
+          <span class="quick-music-icon" aria-hidden="true">♫</span>
+          <span class="quick-equalizer" data-equalizer aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        </button>
+        <span class="quick-track-copy">
+          <small>Сейчас играет</small>
+          <strong data-track-title>Velvet Shuffle</strong>
+        </span>
+        <button class="quick-track-button" type="button" data-track-direction="1" aria-label="Следующий трек">›</button>
+      </section>
+
+      <div class="topbar-actions">
+        <button class="quick-sound-button" type="button" data-sound-toggle aria-pressed="true" aria-label="Включить или выключить звуки игры">
+          <i aria-hidden="true">✦</i>
+          <span>Звук</span>
+          <small data-sound-state>Вкл.</small>
+        </button>
+
+        <details class="odds-widget" id="oddsWidget">
+          <summary class="odds-summary" aria-label="Открыть вероятности комбинаций">
+            <span>Шанс выигрыша</span>
+            <strong id="oddsWinChance">—</strong>
+            <small id="oddsSummaryMeta">после раздачи</small>
+          </summary>
+          <section class="odds-panel" aria-label="Вероятности покерных комбинаций">
+            <div class="odds-panel-heading">
+              <div>
+                <span>Следующая рука</span>
+                <strong>Вероятности комбинаций</strong>
+              </div>
+              <small id="oddsPanelMeta">Раздайте карты</small>
             </div>
-            <small id="oddsPanelMeta">Раздайте карты</small>
-          </div>
-          <div class="odds-rows" id="oddsRows" aria-live="polite"></div>
-        </section>
-      </details>
+            <div class="odds-rows" id="oddsRows" aria-live="polite"></div>
+          </section>
+        </details>
+      </div>
     </header>
 
     <!-- The cabinet contains all controls needed during an active round. -->
@@ -45,6 +66,26 @@
 
       <div class="game-area">
         <div class="message-wrap" aria-live="polite"><p class="message" id="message">Выберите ставку и раздавайте</p></div>
+        <section class="look-toolbar" aria-label="Быстрый выбор оформления карт">
+          <div class="look-group" role="group" aria-label="Лицевая сторона карт">
+            <span class="look-label">Лицо</span>
+            <button class="look-chip" type="button" data-card-theme-choice="ivory" aria-label="Лицевая сторона Ivory" aria-pressed="true" title="Карты Ivory">
+              <span class="mini-card ivory"><b>A</b><i>♠</i></span>
+            </button>
+            <button class="look-chip" type="button" data-card-theme-choice="neon" aria-label="Лицевая сторона Neon" aria-pressed="false" title="Карты Neon">
+              <span class="mini-card neon"><b>K</b><i>♥</i></span>
+            </button>
+            <button class="look-chip" type="button" data-card-theme-choice="noir" aria-label="Лицевая сторона Noir" aria-pressed="false" title="Карты Noir">
+              <span class="mini-card noir"><b>Q</b><i>♦</i></span>
+            </button>
+          </div>
+          <div class="look-group" role="group" aria-label="Рубашка карт">
+            <span class="look-label">Рубашка</span>
+            <button class="look-chip" type="button" data-card-back-choice="royal" aria-label="Рубашка Royal" aria-pressed="true" title="Рубашка Royal"><i class="mini-back royal">7</i></button>
+            <button class="look-chip" type="button" data-card-back-choice="circuit" aria-label="Рубашка Circuit" aria-pressed="false" title="Рубашка Circuit"><i class="mini-back circuit">7</i></button>
+            <button class="look-chip" type="button" data-card-back-choice="emerald" aria-label="Рубашка Emerald" aria-pressed="false" title="Рубашка Emerald"><i class="mini-back emerald">7</i></button>
+          </div>
+        </section>
         <div class="cards" id="cards" aria-label="Карты игрока"></div>
 
         <div class="controls">
@@ -63,9 +104,24 @@
 
     <!-- Secondary controls remain outside the card table but always reachable. -->
     <div class="utility-dock" id="utilityDock">
+      <nav class="quick-table-picker" aria-label="Быстрый выбор игрового стола">
+        <span class="quick-table-label">Стол</span>
+        <button class="room-chip" type="button" data-table-theme-choice="emerald-room" aria-label="Стол Emerald" aria-pressed="true" title="Emerald">
+          <i class="room-dot emerald-room" aria-hidden="true"></i><span>Emerald</span>
+        </button>
+        <button class="room-chip" type="button" data-table-theme-choice="neon-vegas" aria-label="Стол Neon Vegas" aria-pressed="false" title="Neon Vegas">
+          <i class="room-dot neon-vegas" aria-hidden="true"></i><span>Neon</span>
+        </button>
+        <button class="room-chip" type="button" data-table-theme-choice="ruby-royale" aria-label="Стол Ruby Royale" aria-pressed="false" title="Ruby Royale">
+          <i class="room-dot ruby-royale" aria-hidden="true"></i><span>Ruby</span>
+        </button>
+        <button class="room-chip" type="button" data-table-theme-choice="ocean-club" aria-label="Стол Ocean Club" aria-pressed="false" title="Ocean Club">
+          <i class="room-dot ocean-club" aria-hidden="true"></i><span>Ocean</span>
+        </button>
+      </nav>
       <div class="footer-actions" id="utilityActions">
         <button class="text-button" id="historyButton">История</button>
-        <button class="text-button atmosphere-button" id="settingsButton">Атмосфера</button>
+        <button class="text-button atmosphere-button" id="settingsButton">Все стили</button>
         <button class="text-button" id="depositButton">Додеп +1000</button>
         <button class="text-button" id="resetButton">Сброс</button>
         <button class="text-button" id="helpButton">Справка</button>
@@ -122,29 +178,29 @@
       <section class="music-console" aria-labelledby="musicConsoleTitle">
         <div class="console-label">
           <span id="musicConsoleTitle">Сейчас играет</span>
-          <span id="trackCounter">01 / 04</span>
+          <span id="trackCounter" data-track-counter>01 / 04</span>
         </div>
         <div class="track-picker">
-          <button class="track-arrow" id="previousTrack" type="button" aria-label="Предыдущий трек">‹</button>
+          <button class="track-arrow" id="previousTrack" type="button" data-track-direction="-1" aria-label="Предыдущий трек">‹</button>
           <div class="track-copy" aria-live="polite">
-            <strong id="trackTitle">Velvet Shuffle</strong>
-            <small id="trackSubtitle">мягкий casino jazz</small>
+            <strong id="trackTitle" data-track-title>Velvet Shuffle</strong>
+            <small id="trackSubtitle" data-track-subtitle>мягкий casino jazz</small>
           </div>
-          <button class="track-arrow" id="nextTrack" type="button" aria-label="Следующий трек">›</button>
+          <button class="track-arrow" id="nextTrack" type="button" data-track-direction="1" aria-label="Следующий трек">›</button>
         </div>
-        <div class="equalizer" id="equalizer" aria-hidden="true">
+        <div class="equalizer" id="equalizer" data-equalizer aria-hidden="true">
           <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
         </div>
       </section>
 
       <div class="audio-toggles">
-        <button class="setting-toggle" id="musicButton" type="button" aria-pressed="false">
+        <button class="setting-toggle" id="musicButton" type="button" data-music-toggle aria-pressed="false">
           <span><i class="setting-icon" aria-hidden="true">♫</i> Музыка</span>
-          <strong id="musicState">Выкл.</strong>
+          <strong id="musicState" data-music-state>Выкл.</strong>
         </button>
-        <button class="setting-toggle" id="soundButton" type="button" aria-pressed="true">
+        <button class="setting-toggle" id="soundButton" type="button" data-sound-toggle aria-pressed="true">
           <span><i class="setting-icon" aria-hidden="true">✦</i> Звуки игры</span>
-          <strong id="soundState">Вкл.</strong>
+          <strong id="soundState" data-sound-state>Вкл.</strong>
         </button>
       </div>
 
