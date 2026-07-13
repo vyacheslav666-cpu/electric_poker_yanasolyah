@@ -198,7 +198,8 @@ export function playTone(type) {
     const context = getAudioContext();
     const now = context.currentTime;
     const notes = {
-      click: [420], deal: [240, 330], draw: [300, 390],
+      click: [420], select: [520, 780], release: [360, 260],
+      deal: [240, 330], draw: [300, 390],
       lose: [230, 170], error: [130], win: [440, 554, 659, 880],
       bigWin: [392, 523.25, 659.25, 783.99, 1046.5],
       jackpot: [261.63, 392, 523.25, 659.25, 783.99, 1046.5, 1318.51]
@@ -206,7 +207,7 @@ export function playTone(type) {
     notes.forEach((frequency, index) => {
       const osc = context.createOscillator();
       const gain = context.createGain();
-      osc.type = ['win', 'bigWin', 'jackpot'].includes(type) ? 'triangle' : 'sine';
+      osc.type = ['select', 'win', 'bigWin', 'jackpot'].includes(type) ? 'triangle' : 'sine';
       osc.frequency.value = frequency;
       gain.gain.setValueAtTime(.0001, now + index * .09);
       gain.gain.exponentialRampToValueAtTime(.065, now + index * .09 + .01);
