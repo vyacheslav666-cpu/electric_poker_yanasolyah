@@ -2477,3 +2477,32 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
 @media (prefers-reduced-motion: reduce) {
   .odds-widget[data-status="loading"] .odds-summary::before { animation: none; }
 }
+
+
+/* Stable card compositing: filters on the 3-D root can hide or swap card faces. */
+.card-slot.active:hover {
+  z-index: 5;
+  filter: none;
+}
+.card-slot.selected {
+  z-index: 6;
+  filter: none;
+}
+.card-slot.active:hover .card-face {
+  filter: brightness(1.08);
+}
+.card-slot.selected .card-face {
+  filter: drop-shadow(0 0 13px rgba(255, 54, 95, .88));
+}
+.card-slot.selected.active:hover {
+  z-index: 6;
+  transform: translateY(-12px) rotate(-1.5deg);
+}
+.card-slot.selected.active:hover .card-face {
+  filter: brightness(1.08) drop-shadow(0 0 13px rgba(255, 54, 95, .88));
+}
+.card-inner .card-face,
+.card-inner .card-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
