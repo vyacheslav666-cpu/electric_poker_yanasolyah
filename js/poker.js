@@ -5,10 +5,24 @@ export function makeDeck() {
   return SUITS.flatMap(suit => RANKS.map(rank => ({ ...rank, ...suit })));
 }
 
+function randomIndex(maximum) {
+  const crypto = globalThis.crypto;
+  if (!crypto?.getRandomValues) return Math.floor(Math.random() * maximum);
+
+  // Rejection sampling avoids modulo bias while keeping an offline fallback
+  // for older browsers that do not expose Web Crypto.
+  const range = 0x100000000;
+  const limit = range - (range % maximum);
+  const value = new Uint32Array(1);
+  do crypto.getRandomValues(value);
+  while (value[0] >= limit);
+  return value[0] % maximum;
+}
+
 export function shuffle(deck) {
   // In-place Fisher-Yates: callers receive the same deck object in random order.
   for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = randomIndex(i + 1);
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;

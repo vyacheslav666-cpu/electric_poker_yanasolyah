@@ -1,0 +1,20 @@
+{
+  "name": "Электропокер",
+  "short_name": "Электропокер",
+  "description": "Семикарточная покерная аркада с живыми вероятностями и оригинальной музыкой.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080608",
+  "theme_color": "#080608",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

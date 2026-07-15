@@ -229,27 +229,35 @@ function requestOdds() {
     renderOdds();
   };
 
+  const calculateWithoutWorker = () => {
+    if (requestId !== oddsRequestId) return;
+    stopOddsCalculation();
+    oddsFallbackTimer = setTimeout(() => {
+      try {
+        acceptResult({ requestId, result: calculateHandOdds(payload) });
+      } catch (error) {
+        acceptResult({
+          requestId,
+          error: error instanceof Error ? error.message : 'Не удалось рассчитать вероятности.'
+        });
+      }
+    }, 0);
+  };
+
   if ('Worker' in window) {
-    oddsWorker = new Worker(new URL('./probability-worker.js', import.meta.url), { type: 'module' });
-    oddsWorker.addEventListener('message', event => acceptResult(event.data));
-    oddsWorker.addEventListener('error', () => acceptResult({
-      requestId,
-      error: 'Фоновый расчёт не запустился.'
-    }), { once: true });
-    oddsWorker.postMessage(payload);
-    return;
+    try {
+      oddsWorker = new Worker(new URL('./probability-worker.js', import.meta.url), { type: 'module' });
+      oddsWorker.addEventListener('message', event => acceptResult(event.data));
+      oddsWorker.addEventListener('error', calculateWithoutWorker, { once: true });
+      oddsWorker.postMessage(payload);
+      return;
+    } catch {
+      // Module workers can be blocked by browser policy; keep the feature
+      // available with the same deterministic calculation on the main thread.
+    }
   }
 
-  oddsFallbackTimer = setTimeout(() => {
-    try {
-      acceptResult({ requestId, result: calculateHandOdds(payload) });
-    } catch (error) {
-      acceptResult({
-        requestId,
-        error: error instanceof Error ? error.message : 'Не удалось рассчитать вероятности.'
-      });
-    }
-  }, 0);
+  calculateWithoutWorker();
 }
 
 // Render the seven-card hand for ready, selection and result states.
@@ -276,8 +284,10 @@ function renderCards(animate = false, animatedIndices = null) {
       button.style.setProperty('--win-delay', `${state.winningIndices.indexOf(index) * 90}ms`);
     }
     button.dataset.index = index;
+    const selectable = Boolean(card && state.phase === 'holding' && !state.busy);
+    button.disabled = !selectable;
     button.setAttribute('aria-label', card ? `${card.label} ${card.symbol}${state.selected[index] ? ', заменить' : ''}` : 'Закрытая карта');
-    button.setAttribute('aria-pressed', state.selected[index] ? 'true' : 'false');
+    if (selectable) button.setAttribute('aria-pressed', state.selected[index] ? 'true' : 'false');
 
     if (!card) {
       button.innerHTML = '<span class="card-inner"><span class="card-back" aria-hidden="true"></span></span>';
@@ -380,15 +390,28 @@ function renderHistory() {
     els.historyList.innerHTML = '<p class="history-empty">Пока ни одной завершённой партии.</p>';
     return;
   }
-  els.historyList.innerHTML = state.history.map(game => `
-    <article class="history-item">
-      <div>
-        <div class="history-result ${game.win > 0 ? 'won' : ''}">${game.result}</div>
-        <div class="history-meta">${game.time} · ставка ${game.bet} · баланс ${game.balance}</div>
-      </div>
-      <div class="history-money">${game.win > 0 ? `+${game.win}` : '—'}</div>
-      <div class="history-cards">${game.cards}</div>
-    </article>`).join('');
+  const fragment = document.createDocumentFragment();
+  state.history.forEach(game => {
+    const article = document.createElement('article');
+    article.className = 'history-item';
+    const summary = document.createElement('div');
+    const result = document.createElement('div');
+    result.className = 'history-result' + (game.win > 0 ? ' won' : '');
+    result.textContent = game.result;
+    const meta = document.createElement('div');
+    meta.className = 'history-meta';
+    meta.textContent = `${game.time} · ставка ${game.bet} · баланс ${game.balance}`;
+    summary.append(result, meta);
+    const money = document.createElement('div');
+    money.className = 'history-money';
+    money.textContent = game.win > 0 ? `+${game.win}` : '—';
+    const cards = document.createElement('div');
+    cards.className = 'history-cards';
+    cards.textContent = game.cards;
+    article.append(summary, money, cards);
+    fragment.append(article);
+  });
+  els.historyList.replaceChildren(fragment);
 }
 
 function waitForCardAnimations(selector, fallbackMs) {
@@ -723,7 +746,7 @@ els.depositButton.addEventListener('click', () => {
 });
 
 window.addEventListener('keydown', event => {
-  if (els.helpDialog.open) return;
+  if (document.querySelector('dialog[open]')) return;
   if (event.key === 'Escape' && els.oddsWidget.open) els.oddsWidget.open = false;
   if (/^[1-7]$/.test(event.key)) toggleHold(Number(event.key) - 1);
   if ((event.key === 'Enter' || event.key === ' ') && event.target === document.body) {

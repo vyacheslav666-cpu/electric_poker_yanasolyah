@@ -1,0 +1,13 @@
+{
+  "name": "electric-poker-yanasolyah",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Семикарточная браузерная покерная аркада.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

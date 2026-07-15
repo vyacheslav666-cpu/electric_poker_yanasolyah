@@ -39,7 +39,11 @@ electric_poker_yanasolyah/
 │   └── screenshots/              # изображения для README и публикации
 ├── docs/
 │   └── ARCHITECTURE.md           # этот документ
+├── test/                          # движок, вероятности, сохранение и Pages-пути
 ├── .github/workflows/pages.yml   # автоматическая публикация GitHub Pages
+├── package.json                  # встроенный Node.js test runner
+├── manifest.webmanifest          # install-метаданные веб-приложения
+├── favicon.svg                   # масштабируемая иконка приложения
 ├── .gitignore                    # локальные файлы, не попадающие в Git
 ├── .nojekyll                     # отключение обработки проекта Jekyll
 ├── LICENSE                       # полный текст лицензии MIT
@@ -168,11 +172,13 @@ stateDiagram-v2
 
 ## Публикация
 
-Файл `.github/workflows/pages.yml` запускается при каждом push в `main`:
+Файл `.github/workflows/pages.yml` проверяет каждый pull request и запускается при каждом push в `main`:
 
 1. получает исходники;
-2. настраивает GitHub Pages;
-3. загружает весь корень как статический артефакт;
-4. публикует сайт.
+2. запускает тесты движка, вероятностей, сохранения и относительных ссылок;
+3. настраивает GitHub Pages;
+4. копирует runtime-файлы в отдельный каталог `_site`;
+5. загружает только `_site` как статический артефакт;
+6. публикует сайт.
 
 `.nojekyll` сообщает GitHub Pages, что проект не нужно обрабатывать Jekyll. Относительные пути `styles.css` и `js/app.js` позволяют сайту одинаково работать локально и в подпапке GitHub Pages.

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Электропокер">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#5a123e"/>
+      <stop offset="1" stop-color="#120713"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2=".8" y2="1">
+      <stop stop-color="#fff7a8"/>
+      <stop offset=".48" stop-color="#ffd45e"/>
+      <stop offset="1" stop-color="#ff557a"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#080608"/>
+  <rect x="12" y="7" width="40" height="50" rx="8" fill="url(#card)" stroke="#62f5ff" stroke-width="2.5"/>
+  <rect x="16" y="11" width="32" height="42" rx="5" fill="none" stroke="#ffd45e" stroke-opacity=".8"/>
+  <path d="M19 16h28v7l-10 5h7L27 50l5-18H21l12-9H19z" fill="url(#bolt)" stroke="#fff4b0" stroke-width="1.2" stroke-linejoin="round"/>
+</svg>

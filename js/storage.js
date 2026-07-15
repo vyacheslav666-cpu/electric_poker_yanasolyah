@@ -8,43 +8,87 @@ const DEFAULT_CARD_BACK = CARD_BACKS[0].id;
 const CARD_BACK_IDS = new Set(CARD_BACKS.map(theme => theme.id));
 const DEFAULT_TABLE_THEME = TABLE_THEMES[0].id;
 const TABLE_THEME_IDS = new Set(TABLE_THEMES.map(theme => theme.id));
+const MAX_CREDITS = 1_000_000_000;
+const MAX_BET = 1_000_000;
+
+function defaultSave() {
+  return {
+    balance: 1000,
+    bet: 10,
+    sound: true,
+    music: false,
+    musicTrack: DEFAULT_MUSIC_TRACK,
+    cardTheme: DEFAULT_CARD_THEME,
+    cardBack: DEFAULT_CARD_BACK,
+    tableTheme: DEFAULT_TABLE_THEME,
+    history: []
+  };
+}
+
+function safeCredits(value, fallback, minimum = 0, maximum = MAX_CREDITS) {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(maximum, Math.max(minimum, Math.floor(value)));
+}
+
+function safeText(value, maximumLength) {
+  return typeof value === 'string' ? value.slice(0, maximumLength) : '';
+}
+
+function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter(game => game && typeof game === 'object')
+    .slice(0, 30)
+    .map(game => ({
+      time: safeText(game.time, 40),
+      cards: safeText(game.cards, 80),
+      result: safeText(game.result, 60) || 'Без комбинации',
+      bet: safeCredits(game.bet, 10, 10, MAX_BET),
+      win: safeCredits(game.win, 0),
+      balance: safeCredits(game.balance, 0)
+    }));
+}
 
 /** Read and sanitize the browser save instead of trusting localStorage blindly. */
 export function loadSave() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     return {
-      balance: Number.isFinite(saved?.balance) && saved.balance >= 0 ? saved.balance : 1000,
-      bet: Number.isFinite(saved?.bet) && saved.bet >= 10 ? Math.floor(saved.bet / 10) * 10 : 10,
+      balance: Number.isFinite(saved?.balance) && saved.balance >= 0
+        ? safeCredits(saved.balance, 1000)
+        : 1000,
+      bet: Math.floor(safeCredits(saved?.bet, 10, 10, MAX_BET) / 10) * 10,
       sound: saved?.sound !== false,
       music: saved?.music === true,
       musicTrack: MUSIC_TRACK_IDS.has(saved?.musicTrack) ? saved.musicTrack : DEFAULT_MUSIC_TRACK,
       cardTheme: CARD_THEME_IDS.has(saved?.cardTheme) ? saved.cardTheme : DEFAULT_CARD_THEME,
       cardBack: CARD_BACK_IDS.has(saved?.cardBack) ? saved.cardBack : DEFAULT_CARD_BACK,
       tableTheme: TABLE_THEME_IDS.has(saved?.tableTheme) ? saved.tableTheme : DEFAULT_TABLE_THEME,
-      history: Array.isArray(saved?.history) ? saved.history.slice(0, 30) : []
+      history: sanitizeHistory(saved?.history)
     };
   } catch {
-    return {
-      balance: 1000, bet: 10, sound: true, music: false,
-      musicTrack: DEFAULT_MUSIC_TRACK, cardTheme: DEFAULT_CARD_THEME,
-      cardBack: DEFAULT_CARD_BACK, tableTheme: DEFAULT_TABLE_THEME, history: []
-    };
+    return defaultSave();
   }
 }
 
 export function saveState(state) {
   // Transient data (deck, selected cards and animation locks) must not survive
   // a reload; only stable player progress and preferences are persisted.
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    balance: state.balance,
-    bet: state.bet,
-    sound: state.sound,
-    music: state.music,
-    musicTrack: state.musicTrack,
-    cardTheme: state.cardTheme,
-    cardBack: state.cardBack,
-    tableTheme: state.tableTheme,
-    history: state.history
-  }));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      balance: state.balance,
+      bet: state.bet,
+      sound: state.sound,
+      music: state.music,
+      musicTrack: state.musicTrack,
+      cardTheme: state.cardTheme,
+      cardBack: state.cardBack,
+      tableTheme: state.tableTheme,
+      history: state.history
+    }));
+    return true;
+  } catch {
+    // Private browsing policies and full storage quotas must not stop a round.
+    return false;
+  }
 }

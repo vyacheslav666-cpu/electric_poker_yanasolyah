@@ -3182,6 +3182,43 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
   .card-slot.selection-release .card-inner { animation: none !important; }
 }
 
+/* Interaction baseline: inactive cards remain visual content, not dead tab stops. */
+.card-slot:disabled {
+  opacity: 1;
+  color: inherit;
+  cursor: default;
+}
+
+.card-slot:focus-visible,
+.main-button:focus-visible,
+.bet-step:focus-visible,
+.text-button:focus-visible,
+.quick-track-button:focus-visible,
+.quick-music-button:focus-visible,
+.quick-sound-button:focus-visible,
+.look-chip:focus-visible,
+.room-chip:focus-visible,
+.visual-choice:focus-visible,
+.back-choice:focus-visible,
+.table-choice:focus-visible,
+.setting-toggle:focus-visible,
+.track-arrow:focus-visible,
+.dock-toggle:focus-visible {
+  outline: 3px solid #7dfcff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
 /* Brand signature: a two-card 7-bolt emblem plus a compact desktop wordmark. */
 .topbar {
   grid-template-columns: 176px minmax(180px, 1fr) auto;
