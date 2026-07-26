@@ -9,6 +9,7 @@ import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from '
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
 import { calculateHandOdds, ODDS_LABELS } from './probability.js';
+import { affordableBet } from './stake.js';
 // Cache the DOM once; render functions update these nodes throughout a round.
 const els = {
   cards: document.querySelector('#cards'),
@@ -498,11 +499,15 @@ function launchCardSelectionFeedback(index, selected, feedback) {
 
 // Round state: ready → holding → result.
 async function startHand() {
-  const bet = state.bet;
-  if (state.balance < bet) {
-    showToast('Не хватает кредитов. Сбросьте прогресс или уменьшите ставку.');
+  const bet = affordableBet(state.balance, state.bet);
+  if (bet === 0) {
+    showToast('Баланс пуст. Сбросьте прогресс или добавьте кредиты.');
     playTone('error');
     return;
+  }
+  if (bet < state.bet) {
+    state.bet = bet;
+    showToast(`Ставка снижена до ${bet.toLocaleString('ru-RU')} — играем ва-банк!`);
   }
   state.busy = true;
   clearCelebration();
