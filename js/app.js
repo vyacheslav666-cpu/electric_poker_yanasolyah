@@ -93,6 +93,12 @@ configureAudio(() => state);
 
 function save() { saveState(state); }
 function draw() { return state.deck.pop(); }
+function useMobilePerformanceProfile() {
+  return Boolean(
+    window.matchMedia?.('(max-width: 680px), (pointer: coarse)').matches ||
+    (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4)
+  );
+}
 
 // Kept optional: older layouts had a permanent paytable, while the current
 // compact layout exposes the same information inside the help dialog.
@@ -107,6 +113,7 @@ function buildPaytable() {
 
 let oddsWorker = null;
 let oddsFallbackTimer = null;
+let oddsDebounceTimer = null;
 let oddsRequestId = 0;
 
 function stopOddsCalculation() {
@@ -114,6 +121,8 @@ function stopOddsCalculation() {
   oddsWorker = null;
   clearTimeout(oddsFallbackTimer);
   oddsFallbackTimer = null;
+  clearTimeout(oddsDebounceTimer);
+  oddsDebounceTimer = null;
 }
 
 function formatOddsPercent(probability, exact = true) {
@@ -218,7 +227,7 @@ function requestOdds() {
     requestId,
     hand: state.hand,
     selected: [...state.selected],
-    sampleSize: 200000
+    sampleSize: useMobilePerformanceProfile() ? 40000 : 120000
   };
 
   const acceptResult = message => {
@@ -245,20 +254,27 @@ function requestOdds() {
     }, 0);
   };
 
-  if ('Worker' in window) {
-    try {
-      oddsWorker = new Worker(new URL('./probability-worker.js', import.meta.url), { type: 'module' });
-      oddsWorker.addEventListener('message', event => acceptResult(event.data));
-      oddsWorker.addEventListener('error', calculateWithoutWorker, { once: true });
-      oddsWorker.postMessage(payload);
-      return;
-    } catch {
-      // Module workers can be blocked by browser policy; keep the feature
-      // available with the same deterministic calculation on the main thread.
+  const beginCalculation = () => {
+    oddsDebounceTimer = null;
+    if (requestId !== oddsRequestId) return;
+    if ('Worker' in window) {
+      try {
+        oddsWorker = new Worker(new URL('./probability-worker.js', import.meta.url), { type: 'module' });
+        oddsWorker.addEventListener('message', event => acceptResult(event.data));
+        oddsWorker.addEventListener('error', calculateWithoutWorker, { once: true });
+        oddsWorker.postMessage(payload);
+        return;
+      } catch {
+        // Module workers can be blocked by browser policy; keep the feature
+        // available with the same deterministic calculation on the main thread.
+      }
     }
-  }
+    calculateWithoutWorker();
+  };
 
-  calculateWithoutWorker();
+  // Rapid taps should launch one calculation for the final selection, not a
+  // separate worker for every intermediate card state.
+  oddsDebounceTimer = setTimeout(beginCalculation, useMobilePerformanceProfile() ? 240 : 40);
 }
 
 // Render the seven-card hand for ready, selection and result states.
@@ -278,7 +294,7 @@ function renderCards(animate = false, animatedIndices = null) {
     if (animate && (!animatedIndices || animatedIndices.includes(index))) {
       button.classList.add(animatedIndices ? 'redrawing' : 'dealing');
       const animationOrder = animatedIndices ? animatedIndices.indexOf(index) : index;
-      button.style.setProperty('--card-delay', String(animationOrder * 85) + 'ms');
+      button.style.setProperty('--card-delay', String(animationOrder * (useMobilePerformanceProfile() ? 42 : 85)) + 'ms');
     }
     if (state.phase === 'result' && state.winningIndices.includes(index)) {
       button.classList.add('winner');
@@ -303,6 +319,22 @@ function renderCards(animate = false, animatedIndices = null) {
     }
     els.cards.append(button);
   }
+}
+
+function renderCardSelection(index, selected) {
+  const button = els.cards.querySelector('[data-index="' + index + '"]');
+  const card = state.hand[index];
+  if (!button || !card) return;
+
+  button.classList.toggle('selected', selected);
+  button.classList.toggle(
+    'made-combo',
+    !selected && Boolean(state.handHint?.madeIndices.includes(index))
+  );
+  button.classList.remove('selection-pick', 'selection-release');
+  button.classList.add(selected ? 'selection-pick' : 'selection-release');
+  button.setAttribute('aria-pressed', String(selected));
+  button.setAttribute('aria-label', `${card.label} ${card.symbol}${selected ? ', заменить' : ''}`);
 }
 
 function render() {
@@ -443,7 +475,10 @@ function clearCelebration() {
 function launchCelebration(multiplier) {
   clearCelebration();
   const tier = multiplier >= 25 ? 'jackpot' : multiplier >= 4 ? 'big' : 'win';
-  const particleCount = tier === 'jackpot' ? 72 : tier === 'big' ? 44 : 24;
+  const lightEffects = useMobilePerformanceProfile();
+  const particleCount = lightEffects
+    ? tier === 'jackpot' ? 24 : tier === 'big' ? 16 : 10
+    : tier === 'jackpot' ? 72 : tier === 'big' ? 44 : 24;
   const palette = ['#fff2a1', '#ff4f9b', '#5ff7ff', '#8d6bff', '#61ffb0'];
   const fragment = document.createDocumentFragment();
   document.body.dataset.celebration = tier;
@@ -478,10 +513,11 @@ function launchCardSelectionFeedback(index, selected, feedback) {
   burst.style.setProperty('--selection-x', String(rect.left + rect.width / 2) + 'px');
   burst.style.setProperty('--selection-y', String(rect.top + rect.height / 2) + 'px');
 
-  for (let sparkIndex = 0; sparkIndex < 8; sparkIndex++) {
+  const sparkCount = useMobilePerformanceProfile() ? 4 : 8;
+  for (let sparkIndex = 0; sparkIndex < sparkCount; sparkIndex++) {
     const spark = document.createElement('i');
     spark.className = 'selection-spark';
-    spark.style.setProperty('--spark-angle', String(sparkIndex * 45 + (selected ? 8 : -6)) + 'deg');
+    spark.style.setProperty('--spark-angle', String(sparkIndex * (360 / sparkCount) + (selected ? 8 : -6)) + 'deg');
     spark.style.setProperty('--spark-distance', String(-(28 + (sparkIndex % 3) * 8)) + 'px');
     spark.style.setProperty('--spark-delay', String((sparkIndex % 2) * 28) + 'ms');
     burst.append(spark);
@@ -527,7 +563,10 @@ async function startHand() {
   render();
   playTone('deal');
   save();
-  await waitForCardAnimations('.card-slot.dealing', 1700);
+  await waitForCardAnimations(
+    '.card-slot.dealing',
+    useMobilePerformanceProfile() ? 800 : 1700
+  );
   state.busy = false;
   renderCards(false);
   render();
@@ -552,7 +591,10 @@ async function finishHand() {
   state.selected.fill(false);
   renderCards(true, replaced);
   playTone('draw');
-  await waitForCardAnimations('.card-slot.redrawing', 1450);
+  await waitForCardAnimations(
+    '.card-slot.redrawing',
+    useMobilePerformanceProfile() ? 850 : 1450
+  );
 
   const result = evaluateSeven(state.hand);
   state.phase = 'result';
@@ -595,7 +637,7 @@ function toggleHold(index) {
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (navigator.vibrate) navigator.vibrate(reducedMotion ? 10 : selected ? [16, 12, 30] : 14);
   playTone(selected ? 'select' : 'release');
-  renderCards(false);
+  renderCardSelection(index, selected);
   launchCardSelectionFeedback(index, selected, feedback);
   const selectedCount = state.selected.filter(Boolean).length;
   setMessage(

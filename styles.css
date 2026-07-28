@@ -2052,8 +2052,10 @@ body[data-table-theme] .footer-actions { border-color: color-mix(in srgb, var(--
   inset: 0;
   border-radius: inherit;
   transform-style: preserve-3d;
-  will-change: transform;
+  will-change: auto;
 }
+.card-slot.dealing .card-inner,
+.card-slot.redrawing .card-inner { will-change: transform; }
 .card-inner .card-face,
 .card-inner .card-back { backface-visibility: hidden; }
 .card-inner.has-card .card-back { transform: rotateY(180deg); }
@@ -3168,6 +3170,72 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
   .selection-burst::after { width: 13px; height: 13px; }
 }
 
+/* Phones get the same state feedback with cheaper compositing. */
+@media (max-width: 680px), (pointer: coarse) {
+  .cabinet::before,
+  .cabinet.jackpot .game-area::after,
+  .main-button::after,
+  .logo-trace,
+  .message.win,
+  .cabinet[class*="result-"] .message,
+  .quick-equalizer.playing i,
+  .equalizer.playing i,
+  .card-slot.selected .card-face,
+  .card-slot.made-combo:not(.selected) .card-face,
+  .card-slot.winner .card-face,
+  .card-slot.winner::after,
+  .pay-row.current {
+    animation: none;
+  }
+
+  .card-slot.selected .card-face {
+    filter: none;
+  }
+
+  .card-slot.selected .card-face::after {
+    animation: none;
+    box-shadow: inset 0 0 8px rgba(255, 72, 137, .38), 0 0 5px rgba(255, 91, 151, .58);
+  }
+
+  .card-slot.dealing {
+    animation: mobileDeal .38s cubic-bezier(.2, .75, .3, 1.08) both;
+    animation-delay: var(--card-delay, 0ms);
+  }
+  .card-slot.dealing .card-inner {
+    animation: mobileFlip .38s ease-out both;
+    animation-delay: var(--card-delay, 0ms);
+  }
+  .card-slot.redrawing {
+    animation: mobileRedraw .42s cubic-bezier(.2, .75, .3, 1.08) both;
+    animation-delay: var(--card-delay, 0ms);
+  }
+  .card-slot.redrawing .card-inner {
+    animation: mobileFlip .42s ease-out both;
+    animation-delay: var(--card-delay, 0ms);
+  }
+
+  .selection-burst {
+    mix-blend-mode: normal;
+  }
+
+  .odds-widget[data-status="loading"] .odds-summary::before {
+    animation: none;
+  }
+}
+
+@keyframes mobileDeal {
+  from { opacity: 0; transform: translate3d(42px, -38px, 0) scale(.82); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mobileRedraw {
+  from { opacity: 0; transform: translate3d(0, -38px, 0) scale(.84); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mobileFlip {
+  from { transform: rotateY(115deg); }
+  to { transform: none; }
+}
+
 @media (hover: none) {
   .card-slot.active:hover:not(.selected) { transform: none; filter: none; }
   .card-slot.selection-release.active:hover .card-inner { animation-name: tactileInnerRelease; }
@@ -3444,6 +3512,15 @@ body[data-celebration="jackpot"] .fx-layer::before { animation: jackpotScreenFla
 
   .brand-logo:hover .brand-emblem-svg {
     transform: none;
+  }
+}
+
+/* This override must follow the brand rules above to win the cascade. */
+@media (max-width: 680px), (pointer: coarse) {
+  .logo-trace {
+    animation: none;
+    stroke-dasharray: none;
+    opacity: .72;
   }
 }
 
