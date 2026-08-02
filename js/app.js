@@ -9,7 +9,7 @@ import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from '
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
 import { calculateHandOdds, ODDS_LABELS } from './probability.js';
-import { affordableBet } from './stake.js';
+import { affordableBet, calculateWin } from './stake.js';
 // Cache the DOM once; render functions update these nodes throughout a round.
 const els = {
   cards: document.querySelector('#cards'),
@@ -601,7 +601,7 @@ async function finishHand() {
   state.resultKey = result?.payout.key || null;
   state.winningIndices = result?.indices || [];
   if (result) {
-    state.lastWin = result.payout.multiplier * state.bet;
+    state.lastWin = calculateWin(state.bet, result.payout.multiplier);
     state.balance += state.lastWin;
     setWinMessage(result.payout.name, state.lastWin);
     if (navigator.vibrate) navigator.vibrate([55, 35, 70, 35, 110]);

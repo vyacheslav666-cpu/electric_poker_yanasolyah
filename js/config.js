@@ -24,7 +24,7 @@ export const PAYOUTS = [
   { key: 'straight', name: 'Стрит', multiplier: 4 },
   { key: 'three', name: 'Тройка', multiplier: 2 },
   { key: 'two-pair', name: 'Две пары', multiplier: 1 },
-  { key: 'jacks', name: 'Валеты или лучше', multiplier: 1 }
+  { key: 'jacks', name: 'Валеты или лучше', multiplier: 0.5 }
 ];
 
 // Music is generated in the browser, so every track is original, lightweight

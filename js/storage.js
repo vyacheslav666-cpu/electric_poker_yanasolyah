@@ -27,7 +27,8 @@ function defaultSave() {
 
 function safeCredits(value, fallback, minimum = 0, maximum = MAX_CREDITS) {
   if (!Number.isFinite(value)) return fallback;
-  return Math.min(maximum, Math.max(minimum, Math.floor(value)));
+  const bounded = Math.min(maximum, Math.max(minimum, value));
+  return Math.round(bounded * 100) / 100;
 }
 
 function safeText(value, maximumLength) {
@@ -43,7 +44,9 @@ function sanitizeHistory(history) {
       time: safeText(game.time, 40),
       cards: safeText(game.cards, 80),
       result: safeText(game.result, 60) || 'Без комбинации',
-      bet: safeCredits(game.bet, 10, 10, MAX_BET),
+      bet: Number.isFinite(game.bet) && game.bet > 0
+        ? safeCredits(game.bet, 10, 0.01, MAX_BET)
+        : 10,
       win: safeCredits(game.win, 0),
       balance: safeCredits(game.balance, 0)
     }));

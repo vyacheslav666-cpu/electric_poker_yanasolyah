@@ -9,6 +9,7 @@ const multipliers = Object.fromEntries(
 );
 
 test('weaker made hands use the rebalanced payouts', () => {
+  assert.equal(multipliers.jacks, 0.5);
   assert.equal(multipliers['two-pair'], 1);
   assert.equal(multipliers.three, 2);
   assert.equal(multipliers['full-house'], 7);
