@@ -19,11 +19,11 @@ export const PAYOUTS = [
   { key: 'royal', name: 'Флеш-рояль', multiplier: 250 },
   { key: 'straight-flush', name: 'Стрит-флеш', multiplier: 50 },
   { key: 'four', name: 'Каре', multiplier: 25 },
-  { key: 'full-house', name: 'Фулл-хаус', multiplier: 9 },
+  { key: 'full-house', name: 'Фулл-хаус', multiplier: 7 },
   { key: 'flush', name: 'Флеш', multiplier: 6 },
   { key: 'straight', name: 'Стрит', multiplier: 4 },
-  { key: 'three', name: 'Тройка', multiplier: 3 },
-  { key: 'two-pair', name: 'Две пары', multiplier: 2 },
+  { key: 'three', name: 'Тройка', multiplier: 2 },
+  { key: 'two-pair', name: 'Две пары', multiplier: 1 },
   { key: 'jacks', name: 'Валеты или лучше', multiplier: 1 }
 ];
 
