@@ -47,6 +47,9 @@ function sanitizeHistory(history) {
       bet: Number.isFinite(game.bet) && game.bet > 0
         ? safeCredits(game.bet, 10, 0.01, MAX_BET)
         : 10,
+      rerolls: Number.isFinite(game.rerolls)
+        ? Math.max(0, Math.min(7, Math.floor(game.rerolls)))
+        : 0,
       win: safeCredits(game.win, 0),
       balance: safeCredits(game.balance, 0)
     }));

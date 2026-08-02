@@ -47,12 +47,13 @@ test('fractional credits survive save loading', () => {
   useStorage(JSON.stringify({
     balance: 12.5,
     bet: 10,
-    history: [{ bet: 5, win: 2.5, balance: 7.5 }]
+    history: [{ bet: 5, rerolls: 3, win: 2.5, balance: 7.5 }]
   }));
 
   const save = loadSave();
   assert.equal(save.balance, 12.5);
   assert.equal(save.history[0].bet, 5);
+  assert.equal(save.history[0].rerolls, 3);
   assert.equal(save.history[0].win, 2.5);
   assert.equal(save.history[0].balance, 7.5);
 });
