@@ -42,3 +42,17 @@ test('unavailable local storage never interrupts the game', () => {
   useStorage(null, () => { throw new Error('quota exceeded'); });
   assert.equal(saveState({ history: [] }), false);
 });
+
+test('fractional credits survive save loading', () => {
+  useStorage(JSON.stringify({
+    balance: 12.5,
+    bet: 10,
+    history: [{ bet: 5, win: 2.5, balance: 7.5 }]
+  }));
+
+  const save = loadSave();
+  assert.equal(save.balance, 12.5);
+  assert.equal(save.history[0].bet, 5);
+  assert.equal(save.history[0].win, 2.5);
+  assert.equal(save.history[0].balance, 7.5);
+});
