@@ -8,16 +8,8 @@ export function affordableBet(balance, selectedBet) {
   return Math.min(available, requested);
 }
 
-/** Each replaced card removes ten percentage points from the final payout. */
-export function rerollPayoutFactor(replacedCards) {
-  const count = Number.isFinite(replacedCards)
-    ? Math.max(0, Math.min(7, Math.floor(replacedCards)))
-    : 0;
-  return Math.round((1 - count * 0.1) * 100) / 100;
-}
-
 /** Keep fractional payouts stable without accumulating float noise. */
-export function calculateWin(bet, multiplier, payoutFactor = 1) {
-  if (!Number.isFinite(bet) || !Number.isFinite(multiplier) || !Number.isFinite(payoutFactor)) return 0;
-  return Math.max(0, Math.round(bet * multiplier * payoutFactor * 100) / 100);
+export function calculateWin(bet, multiplier) {
+  if (!Number.isFinite(bet) || !Number.isFinite(multiplier)) return 0;
+  return Math.max(0, Math.round(bet * multiplier * 100) / 100);
 }

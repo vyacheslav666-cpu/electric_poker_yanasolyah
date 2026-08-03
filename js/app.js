@@ -9,7 +9,7 @@ import { configureAudio, playTone, setMusicTrack, startMusic, stopMusic } from '
 import { analyzeHandHints, evaluateSeven, makeDeck, shuffle } from './poker.js';
 import { loadSave, saveState } from './storage.js';
 import { calculateHandOdds, ODDS_LABELS } from './probability.js';
-import { affordableBet, calculateWin, rerollPayoutFactor } from './stake.js';
+import { affordableBet, calculateWin } from './stake.js';
 // Cache the DOM once; render functions update these nodes throughout a round.
 const els = {
   cards: document.querySelector('#cards'),
@@ -383,7 +383,7 @@ function render() {
   els.mainButton.classList.toggle('shuffle-mode', shuffleMode);
   els.mainButton.classList.toggle('deal-mode', !shuffleMode);
   els.mainButton.textContent = shuffleMode
-    ? `Перетусовать${selectedCount ? ` · ${selectedCount} (${Math.round(rerollPayoutFactor(selectedCount) * 100)}%)` : ''}`
+    ? `Перетусовать${selectedCount ? ` · ${selectedCount}` : ''}`
     : 'Раздать 7 карт';
   document.querySelectorAll('.pay-row').forEach(row => row.classList.toggle('current', row.dataset.payKey === state.resultKey));
 }
@@ -405,15 +405,14 @@ function setMessage(text, kind = '') {
   });
 }
 
-function setWinMessage(name, points, payoutFactor = 1) {
+function setWinMessage(name, points) {
   setMessage('', 'win');
   const title = document.createElement('strong');
   title.className = 'combo-name';
   title.textContent = name;
   const score = document.createElement('span');
   score.className = 'combo-points';
-  const penalty = payoutFactor < 1 ? ` · выплата ${Math.round(payoutFactor * 100)}%` : '';
-  score.textContent = `+${points} очков${penalty}`;
+  score.textContent = `+${points} очков`;
   els.message.append(title, score);
 }
 
@@ -434,10 +433,7 @@ function renderHistory() {
     result.textContent = game.result;
     const meta = document.createElement('div');
     meta.className = 'history-meta';
-    const rerollMeta = game.rerolls
-      ? ` · замена ${game.rerolls} (${Math.round(rerollPayoutFactor(game.rerolls) * 100)}%)`
-      : '';
-    meta.textContent = `${game.time} · ставка ${game.bet}${rerollMeta} · баланс ${game.balance}`;
+    meta.textContent = `${game.time} · ставка ${game.bet} · баланс ${game.balance}`;
     summary.append(result, meta);
     const money = document.createElement('div');
     money.className = 'history-money';
@@ -601,14 +597,13 @@ async function finishHand() {
   );
 
   const result = evaluateSeven(state.hand);
-  const payoutFactor = rerollPayoutFactor(replaced.length);
   state.phase = 'result';
   state.resultKey = result?.payout.key || null;
   state.winningIndices = result?.indices || [];
   if (result) {
-    state.lastWin = calculateWin(state.bet, result.payout.multiplier, payoutFactor);
+    state.lastWin = calculateWin(state.bet, result.payout.multiplier);
     state.balance += state.lastWin;
-    setWinMessage(result.payout.name, state.lastWin, payoutFactor);
+    setWinMessage(result.payout.name, state.lastWin);
     if (navigator.vibrate) navigator.vibrate([55, 35, 70, 35, 110]);
     launchCelebration(result.payout.multiplier);
     playTone(result.payout.multiplier >= 25 ? 'jackpot' : result.payout.multiplier >= 4 ? 'bigWin' : 'win');
@@ -622,7 +617,6 @@ async function finishHand() {
     cards: state.hand.map(card => `${card.label}${card.symbol}`).join('  '),
     result: result?.payout.name || 'Без комбинации',
     bet: state.bet,
-    rerolls: replaced.length,
     win: state.lastWin,
     balance: state.balance
   });
@@ -646,9 +640,8 @@ function toggleHold(index) {
   renderCardSelection(index, selected);
   launchCardSelectionFeedback(index, selected, feedback);
   const selectedCount = state.selected.filter(Boolean).length;
-  const payoutPercent = Math.round(rerollPayoutFactor(selectedCount) * 100);
   setMessage(
-    selectedCount ? `Замена: ${selectedCount} · выплата ${payoutPercent}%` : state.handHint.label,
+    selectedCount ? `Для замены выбрано: ${selectedCount}` : state.handHint.label,
     selectedCount ? '' : state.handHint.madeIndices.length ? 'made-hint' : ''
   );
   render();
